@@ -6,8 +6,6 @@ MainApplication::MainApplication()
 
 void MainApplication::runApplication(int argc, char *argv[])
 {
-//    cout << "MainApplication::runApplication()" << endl;
-
     double dt, T, Tbath, tau, L;
     int nSteps, thermostat, N, calculateStatistics, saveStates;
 
@@ -60,22 +58,6 @@ void MainApplication::runApplication(int argc, char *argv[])
     sampler.initialize_pairCorrelation(200, 1);
 
     ostringstream filename;
-//    ostringstream velocityFilename;
-//    ofstream fout;
-//    fout.open("./output/output5.5.txt");
-
-//    double dt = 0.005; // in MD units
-//    bool calculateStatistics = 1;
-//    double Tbath = 1.0; // MD units
-//    double tau = 10.0;
-
-//    cout << "Initial conditions (r, v, a) (MD units):" << endl;
-//    cout << state.getAtom(1).getPosition().t();
-//    cout << state.getAtom(1).getVelocity().t();
-//    cout << state.getAtom(1).getForce().t();
-//    cout << endl;
-
-//    state.average();
 
 //    state.load("./output/states/final_T5.5_N1000_dt0.005.xyz");
 
@@ -89,62 +71,34 @@ void MainApplication::runApplication(int argc, char *argv[])
 
         if (calculateStatistics) sampler.sample(state, 1, dt*i);
         //if (i>250) sampler.pairCorrelation();
-        cout << "P = " << sampler.P << ", T = " << sampler.T << endl;
 
         if (thermostat == 1) state.berendsen(Tbath, sampler.T, tt);
-        else if (thermostat == 2) state.andersen(Tbath, sampler.T, tt, &seed);
+        else if (thermostat == 2) state.andersen(Tbath, tt, &seed);
 
         state.move(dt, calculateStatistics);
-
-        //cout << "Intermediate conditions (r, v, a) (MD units):" << endl;
-        //cout << state.getAtom(95).getPosition().t();
-        //cout << state.getAtom(95).getVelocity().t();
-        //cout << state.getAtom(95).getForce().t();
     }
-//    state.save("./output/states/final_T5.5_N2000_dt0.005.xyz", 0, 0);
-
     sampler.sample(state, 1, nSteps*dt);
     sampler.pairCorrelation_manual("./output/pairCorrelation_final", 1, 200);
-
-//    cout << endl << "Final conditions (r, v, a) (MD units): " << endl;
-//    cout << state.getAtom(1).getPosition().t();
-//    cout << state.getAtom(1).getVelocity().t();
-//    cout << state.getAtom(1).getForce().t() << endl;
-//    cout << "Boundary crossings: " << endl;
-//    cout << state.getAtom(1).getBoundaryCrossings().t() << endl;
-//    cout << "System dimensions (MD units): " << endl;
-//    cout << state.size.t() << endl;
-
-    //state.average();
 }
 
 CState MainApplication::initialize(double T_, double L_, int N_, long* seed)
 {
-//    cout << "MainApplication::Initialize()" << endl;
-
     ivec3 N;
     vec3 L;
 
     N << N_ << N_ << N_;
-    //L << 5.260 << 5.260 << 5.260;
     L << L_ << L_ << L_;
     L /= L0; // converting to MD units
     double T = T_;
-
-    //double T = 100;           // Kelvin
-    //T = T/T0;                 // converting to MD units
-    //double T = 5.5; // MD units;
-
     double sigma_v = sqrt(T); // MD units
     double interactionLength = 3.0; // MD units
-    //long seed = -1; // CHANGE THIS
 
     cout << "T_initial (MD)     :    " << T << endl;
     cout << "sigma_v (MD)       :    " << sigma_v << endl;
 
     CState state("Ar", "fcc", N, L, interactionLength);
     state.randnVelocity(0.0, sigma_v, seed);
-    //state.randuVelocity(0.0, sigma_v, &seed);
+    //state.randuVelocity(0.0, sigma_v, seed);
 
     return state;
 }

@@ -81,8 +81,6 @@ double CStatisticsSampler::temperature(bool MDunits)
 
 double CStatisticsSampler::pressure(bool MDunits)
 {
-    //double rho = nAtoms/volume; // MD units
-
     double sum = 0.0;
     for (int i = 0; i < nAtoms; i++)
     {
@@ -128,7 +126,6 @@ void CStatisticsSampler::initialize_pairCorrelation(int nBins_, bool MDunits)
 
 imat CStatisticsSampler::pairCorrelation()
 {
-    //int nBins = 200;
     double r;
     vec3 rvec;
     ivec count = zeros<ivec>(nBins,1);
@@ -147,12 +144,6 @@ imat CStatisticsSampler::pairCorrelation()
             count(int(r/L_bins)) += 2;
         }
     }
-    //mat g(nBins,2);
-    //for (int i = 0; i < nBins; i++)
-    //    g(i, 0) = i*L_bins;
-    //if (!MDunits)
-    //    g *= L0;
-    //g.col(1) = conv_to<mat>::from(count);
 
     for (int i = 0; i < nBins; i++)
         fprintf(pairCorrelationFile, "%d ", count(i));
@@ -162,7 +153,6 @@ imat CStatisticsSampler::pairCorrelation()
 
 mat CStatisticsSampler::pairCorrelation_manual(string filename, bool MDunits, int nBins_)
 {
-    //int nBins = 200;
     double r, L_bins_;
     vec3 rvec;
     ivec count = zeros<ivec>(nBins_,1);

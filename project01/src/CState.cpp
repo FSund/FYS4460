@@ -2,20 +2,15 @@
 
 CState::CState()
 {
-//    cout << "CState: Using the default constructor. You might want to try the custom constructor instead!" << endl;
-    // default constructor
-}
+} // default constructor
 
 CState::CState(string element, string structure, ivec3 N, vec3 L, double interactionLength):
     structure(structure),
     N(N),
     L(L)
 {
-//    cout << "CState: Using custom constructor" << endl;
-
     int atoms_per_site, sites_per_cell;
     mat r; // positions;
-    //double interactionLength = 3.0; // MD units (= 3*sigma = 3*L0)
 
     if (structure == "fcc")
     {
@@ -45,17 +40,13 @@ CState::CState(string element, string structure, ivec3 N, vec3 L, double interac
     }
     else
     {
-        //        sites_per_cell = 1;
         cout << "Unknown structure" << endl;
+        exit(1);
     }
-
-//    cout << "Exiting CState custom constructor" << endl;
 }
 
 void CState::makeAtoms(ivec3 N, vec3 L, mat r, double sites_per_cell)
 {
-//    cout << "CState::makeAtoms" << endl;
-
     vec3 cellPos;
 
     atoms = vector<CAtom*>();
@@ -76,14 +67,10 @@ void CState::makeAtoms(ivec3 N, vec3 L, mat r, double sites_per_cell)
             }
         }
     }
-
-//    cout << "Exiting CState::makeAtoms" << endl;
 }
 
 void CState::makeBoxes(const vec3 systemSize, const double interactionLength)
 {
-//    cout << "CState::makeBoxes" << endl;
-
     ivec3 boxIndex;
     vec3 boxPos;
 
@@ -104,7 +91,6 @@ void CState::makeBoxes(const vec3 systemSize, const double interactionLength)
                 boxPos = boxIndex%boxDimensions;
                 CBox* box = new CBox(nBoxes, boxPos, boxDimensions, boxIndex, NBoxes);
                 boxes[calculate_box_number(boxIndex, NBoxes)] = box;
-//                cout << "box number : " << calculate_box_number(boxIndex, NBoxes) << endl;
             }
         }
     }
@@ -119,13 +105,10 @@ void CState::makeBoxes(const vec3 systemSize, const double interactionLength)
          << "system size    (MD): " << systemSize.t()
          << "               (SI): " << systemSize.t()*L0
          << "number of boxes    :    " << nBoxes << endl << endl;
-//    cout << "Exiting CState::makeBoxes" << endl;
 }
 
 void CState::fillBoxes()
 {
-//    cout << "CState::fillBoxes" << endl;
-
     vec3 atomPosition;
     ivec3 boxIndex;
     CAtom* atomptr;
@@ -140,14 +123,10 @@ void CState::fillBoxes()
         }
         boxes[calculate_box_number(boxIndex, NBoxes)]->addAtom(atomptr);
     }
-
-//    cout << "Exiting CState::fillBoxes" << endl;
 }
 
 void CState::randnVelocity(double mean, double sigma_v, long *seed)
 {
-//    cout << "CState::randnVelocity" << endl;
-
     vec2 randomNormal, randomUniform;
     mat velocities(nAtoms, 3);
     rowvec3 momentum;
@@ -168,8 +147,6 @@ void CState::randnVelocity(double mean, double sigma_v, long *seed)
         }
     }
 
-    //cout << "Linear momentum of the system before (in MD units) = " << sum(velocities)/nAtoms;
-
     momentum = sum(velocities)/nAtoms; // finding the linear momentum of the system
     for (int i = 0; i < nAtoms; i++)
     {
@@ -180,11 +157,7 @@ void CState::randnVelocity(double mean, double sigma_v, long *seed)
     for (int i = 0; i < nAtoms; i++)
     {
         atoms[i]->setVelocity(velocities.row(i).t());
-        //atoms.at(i).setVelocity((velocities.row(i) - momentum).t());
     }
-    //cout << "Linear momentum of the system after (int MD units) = " << sum(velocities)/nAtoms;
-
-    //    cout << "Exiting CState::randnVelocity" << endl << endl;
 }
 
 void CState::randuVelocity(double mean, double vmax, long *seed)
@@ -215,8 +188,6 @@ void CState::randuVelocity(double mean, double vmax, long *seed)
 
 void CState::save(string filename, bool forces, bool indexing)
 {
-    //cout << "CState::save" << endl;
-
     // // check and fix the extension of the filename
     // if (filename.substr(filename.find_last_of(".")) != ".xyz")
     // {
@@ -292,72 +263,6 @@ void CState::saveVelocity(string filename, bool MDUnits)
     ofile.close();
 }
 
-//void CState::save(string filename, bool forces, bool indexing)
-//{
-//    //cout << "CState::save" << endl;
-
-//    double force;
-//    CBox* box;
-//    linkedList<CAtom*> atomList;
-//    CAtom* atom;
-//    int nnatoms;
-
-//    // open file stream
-//    ofstream ofile;
-//    ofile.open(filename.c_str());
-
-//    ofile << nAtoms << endl;
-//    ofile << "Comment" << endl;
-
-//    int atomNr = 0;
-//    for (int i = 0; i < nBoxes; i++)
-//    {
-//        box = boxes[i];
-//        atomList = box->readAtomList();
-//        nnatoms = atomList.length();
-//        for (int per = 0; per < nnatoms; per++)
-//        //while (atomList.)
-//        {
-//            atom = atomList();
-
-//            ofile << "Ar";
-//            //ofile << scientific; // uncomment if you want "0.000000e+00" formatting
-//            ofile << setw(16) << setprecision(8);
-//            for (int j = 0; j < 3; j++)
-//            {
-//                ofile << setw(18) << setprecision(8) << (atom->getPosition()(j))*L0;
-//            }
-//            for (int j = 0; j < 3; j++)
-//            {
-//                ofile << setw(16) << setprecision(8) << (atom->getVelocity()(j))*(L0/t0);
-//            }
-//            if (forces)
-//            {
-//                for (int j = 0; j < 3; j++)
-//                {
-//                    ofile << setw(16) << setprecision(8) << (atom->getForce()(j))*F0;
-//                }
-//                force = norm(atom->getForce(), 2);
-//                ofile << setw(16) << setprecision(8) << force*F0;
-//            }
-//            if (indexing)
-//            {
-//                ofile << setw(16) << setprecision(8) << atomNr+1;
-//                ofile << setw(16) << setprecision(8) << i+1;
-//            }
-//            ofile << endl;
-
-//            atomList = *atomList.readNext();
-//            atomNr++;
-//        }
-//    }
-
-//    ofile.close();
-
-//    //cout << "Exiting CState::save" << endl;
-//}
-
-
 void CState::load(string filename)
 {
     cout << "CState::load" << endl;
@@ -400,23 +305,15 @@ void CState::load(string filename)
                 atoms[counter/7-1]->setVelocity(velocity/(L0/t0));
             }
         }
-        //while (ofile.good())
-        //{
-        //    getline(ofile, line);
-        //    cout << line << endl;
-        //}
     }
     else cout << "Unable to open file!" << endl;
 }
 
 void CState::move(const double dt, const bool statistics)
 {
-    //cout << "CState::move" << endl;
-
-    CAtom atom;
     vec3 position, velocity, force;
-    vec3 newposition, newvelocity, newforce;
-    vec3 zerovec3 = zeros<vec>(3,1), vdt2;
+    vec3 newposition, newvelocity;
+    vec3 vdt2;
     mat vHalf(3, nAtoms);
     ivec3 iBoundaryCrossings;
     vec3 fBoundaryCrossings;
@@ -437,11 +334,8 @@ void CState::move(const double dt, const bool statistics)
         {
             fBoundaryCrossings(j) = floor(newposition(j)/size(j));
             iBoundaryCrossings(j) = int(fBoundaryCrossings(j));
-            // just using the integer version gives integer overflow for
-            // positions far away from 0, which results in some atoms escaping.
-            // This in turn gives segmentation fault in CState::move() when
-            // trying to find the box-index of the escaped atom.
-            // The solution is to use the float version, but this might be slower???
+            // we could just use the integer version, but this gives overflow
+            // much faster than the float version
         }
         if (iBoundaryCrossings(0) != 0 || iBoundaryCrossings(1) != 0 || iBoundaryCrossings(2) != 0)
         {
@@ -462,13 +356,8 @@ void CState::move(const double dt, const bool statistics)
         // this method checks if any of the atoms in a box has moved outside the
         // box, if so removes it from the box, and adds the offending atoms to
         // the linked list we supply
-
         boxes[i]->purgeAtoms(boxlessAtoms);
     }
-
-    ////
-    //cout << "Managed to purge atoms" << endl;
-    ////
 
     vec3 atomPosition;
     ivec3 boxIndex;
@@ -486,18 +375,9 @@ void CState::move(const double dt, const bool statistics)
         atomptr = boxlessAtoms(); // the current atom/item in the list
         atomPosition = atomptr->getNewPosition();
 
-        ////
-        //cout << atomPosition.t() << endl;
-        ////
-
         // finding the index of the box this atom belongs in
         for (int j = 0; j < 3; j++)
             boxIndex(j) = int(floor(atomPosition(j)/boxDimensions(j)));
-
-
-        ////
-        //cout << calculate_box_number(boxIndex, NBoxes) << endl;
-        ////
 
         // adding the atom to the box it belongs in
         boxes[calculate_box_number(boxIndex, NBoxes)]->addAtom(atomptr);
@@ -505,10 +385,6 @@ void CState::move(const double dt, const bool statistics)
         // moving one step forward in the list
         boxlessAtoms = *boxlessAtoms.readNext();
     }
-
-    ////
-    //cout << "hei" << endl;
-    ////
 
     // then we find the new forces for all the atoms
     // this needs to be done _after_ finding all the new positions, since we
@@ -571,10 +447,6 @@ void CState::berendsen(const double Tbath, const double T, const double tt)
     double gamma = sqrt(1 + tt*(Tbath/T - 1));
     vec3 velocity;
 
-    ////
-    cout << "gamma from berendsen = " << gamma << endl;
-    ////
-
     for (int i = 0; i < nAtoms; i++)
     {
         velocity = atoms[i]->getVelocity();
@@ -583,7 +455,7 @@ void CState::berendsen(const double Tbath, const double T, const double tt)
     }
 }
 
-void CState::andersen(const double Tbath, const double T, const double tt, long* seed)
+void CState::andersen(const double Tbath, const double tt, long* seed)
 {
     double sigma = sqrt(Tbath), R;
     vec3 velocity;
@@ -607,7 +479,6 @@ void CState::andersen(const double Tbath, const double T, const double tt, long*
         }
     }
 }
-
 
 void CState::average()
 {
@@ -671,29 +542,4 @@ vector<CBox*> CState::getBoxes() const
 CBox CState::getBox(int i) const
 {
     return *boxes[i];
-}
-
-void CState::test()
-{
-    cout << "CState::test" << endl;
-
-    for (int i = 0; i < nAtoms; i++)
-    {
-        cout << "address of CAtom in vector     = " << atoms[i] << endl;
-    }
-
-    CAtom* atomptr;
-    atomptr = boxes[0]->readFirstAtomPtr();
-    cout << atomptr << endl;
-    cout << atomptr->getPosition().t() << endl;
-
-    boxes[0]->printAtomAddresses();
-    for (int i = 0; i < nAtoms; i++)
-    {
-        atomptr = atoms[i];
-        cout << "address of atom in vector      = " << atomptr << endl;
-        //cout <<
-    }
-
-    cout << "Exiting CState::test" << endl;
 }

@@ -41,14 +41,10 @@ public:
     CAtom* readFirstAtomPtr() const;
 
     void printAtomAddresses();
-
     int length() const;
 
     vec3 forceFromBox(const vec3 r0) const;
     void forceFromBox(const vec3 r0, vec3 &force, double &potSum, double &pressureSum) const;
-//    vec3 forceFromBox(const double r_i, const double r_j, const double r_k) const;
-
-    void test();
 protected:
     int nBoxes;
     int nNeighbours;

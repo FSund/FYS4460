@@ -39,14 +39,8 @@ CBox::CBox(const int nBoxes,
     nAtoms(1)
 {
     atomPtrList = linkedList<CAtom*>(firstAtomptr); // there might be a better way to do this!!
-    cout << "Creating box with first atomptr in it" << endl;
+    //cout << "Creating box with first atomptr in it" << endl;
 }
-
-//void CBox::addAtomByRef(CAtom* ptratom)
-//{
-//    cout << "ptratom = " << ptratom << endl;
-//    atomPtrList.append(*ptratom);
-//}
 
 void CBox::addAtom(CAtom* &atomptr)
 {
@@ -57,7 +51,6 @@ void CBox::addAtom(CAtom* &atomptr)
     }
     else
     {
-        //atomPtrList.insertFirstItem(atomptr);
         atomPtrList.insertFirstItem(atomptr);
     }
     nAtoms++;
@@ -99,8 +92,8 @@ void CBox::findNeighbours(const vec3 &systemSize)
                 alreadyInList = 0;
                 for (int j = 0; j < i; j++)
                 {
-                    //if (conv_to<int>::from(sum(boxIndex == neighbourIndices.col(j))) == 3) // Blindern
-                    if (sum(boxIndex == neighbourIndices.col(j)) == 3) // at home
+                    if (conv_to<int>::from(sum(boxIndex == neighbourIndices.col(j))) == 3) // if the compiler gives you trouble here, use the line below instead
+                    //if (sum(boxIndex == neighbourIndices.col(j)) == 3)
                     {
                         alreadyInList = 1;
                         continue; // break out of this for loop
@@ -138,7 +131,7 @@ void CBox::purgeAtoms(linkedList<CAtom*> &boxlessAtoms)
 {
     if (empty)
     {
-//        cout << "! Atomlist/box number " << boxNumber << " empty, exiting purge !" << endl;
+        // cout << "! Atomlist/box number " << boxNumber << " empty, exiting purge !" << endl;
         return;
     }
 
@@ -218,7 +211,7 @@ void CBox::calculateForces(const vector<CBox*> boxes)
 {
     if (empty)
     {
-//        cout << "! Atomlist/box number " << boxNumber << " empty, exiting calculateForce !" << endl;
+        // cout << "! Atomlist/box number " << boxNumber << " empty, exiting calculateForce !" << endl;
         return;
     }
 
@@ -261,7 +254,8 @@ void CBox::calculateForces(const vector<CBox*> boxes)
         atomList = atomList->readNext();
     }
 
-    // finding the forces from atoms in this box itself
+    //////////////////////////////////////////////////////
+    // finding the forces from atoms in this box itself //
     const linkedList<CAtom*>* atomList2;
     vec3 newPosition2, drvec;
     double dr2, dr6, LJ;
@@ -322,7 +316,7 @@ void CBox::calculateForcesAndStatistics(const vector<CBox*> boxes)
 {
     if (empty)
     {
-//        cout << "! Atomlist/box number " << boxNumber << " empty, exiting calculateForce !" << endl;
+        // cout << "! Atomlist/box number " << boxNumber << " empty, exiting calculateForce !" << endl;
         return;
     }
 
@@ -373,7 +367,8 @@ void CBox::calculateForcesAndStatistics(const vector<CBox*> boxes)
         atomList = atomList->readNext();
     }
 
-    // finding the forces from atoms in this box itself
+    //////////////////////////////////////////////////////
+    // finding the forces from atoms in this box itself //
     const linkedList<CAtom*>* atomList2;
     vec3 newPosition2, drvec;
     double dr2, dr6, LJ;
@@ -447,7 +442,7 @@ vec3 CBox::forceFromBox(const vec3 r0) const
 {
     if (empty)
     {
-//        cout << "! Atomlist/box number " << boxNumber << " empty, exiting forceFromBox and returning zerovec3 !" << endl;
+        //cout << "! Atomlist/box number " << boxNumber << " empty, exiting forceFromBox and returning zerovec3 !" << endl;
         return zeros<vec>(3,1);
     }
 
@@ -490,7 +485,7 @@ void CBox::forceFromBox(
 {
     if (empty)
     {
-//        cout << "! Atomlist/box number " << boxNumber << " empty, exiting forceFromBox and returning zerovec3 !" << endl;
+        //cout << "! Atomlist/box number " << boxNumber << " empty, exiting forceFromBox and returning zerovec3 !" << endl;
         force.zeros();
         potSum = 0.0;
         pressureSum = 0.0;
@@ -533,59 +528,6 @@ void CBox::forceFromBox(
 
         atomList = atomList->readNext();
     }
-}
-
-//vec3 CBox::forceFromBox(const double r_i, const double r_j, const double r_k) const
-//{
-//    if (empty)
-//    {
-//        cout << "! Atomlist " << boxNumber << " empty, exiting forceFromBox and returning zerovec3 !" << endl;
-//        return zeros<vec>(3,1);
-//    }
-
-//    const linkedList<CAtom*>* atomList;
-//    atomList = &atomPtrList;
-//    vec3 drvec, r, forceComponent, force;
-//    double dr, dr6, LJ;
-
-//    //force(0) = 0.0;
-//    //force(1) = 0.0;
-//    //force(2) = 0.0;
-//    force.zeros();
-//    while (atomList != 0)
-//    {
-//        r = atomList->operator()()->getNewPosition();
-//        drvec(0) = r_i - r(0);
-//        drvec(1) = r_j - r(1);
-//        drvec(2) = r_k - r(2);
-//        //drvec = r0 - atomList->operator()()->getNewPosition();
-//        dr = sqrt(drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2));
-
-//        //forceComponent = LennardJonesForce(dr)*(drvec/dr);
-//        dr6 = dr*dr*dr*dr*dr*dr;
-//        LJ = 24*(2.0 - dr6)/(dr6*dr6*dr*dr);
-//        forceComponent(0) = LJ*drvec(0);
-//        forceComponent(1) = LJ*drvec(1);
-//        forceComponent(2) = LJ*drvec(2);
-
-//        //force += forceComponent;
-//        force(0) += forceComponent(0);
-//        force(1) += forceComponent(1);
-//        force(2) += forceComponent(2);
-
-//        atomList->operator()()->addToNewForce(-forceComponent);
-
-//        atomList = atomList->readNext();
-//    }
-
-//    return force;
-//}
-
-void CBox::test()
-{
-//    cout << neighbourIndices.t();
-//    cout << displacementVectors.t();
-//    cout << endl;
 }
 
 linkedList<CAtom*> CBox::readAtomList() const

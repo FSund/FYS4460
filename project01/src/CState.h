@@ -37,7 +37,7 @@ public:
     void newForces();
     void newForcesAndStatistics();
     void berendsen(const double Tbath, const double T, const double tt);
-    void andersen(const double Tbath, const double T, const double tt, long *seed);
+    void andersen(const double Tbath, const double tt, long *seed);
 
     void average();
 
@@ -48,8 +48,6 @@ public:
     CBox getBox(int i) const;
     vector<CAtom*> getAtoms() const;
     vector<CBox*> getBoxes() const;
-
-    void test();
 
     friend class MainApplication;
 protected:
