@@ -1,0 +1,148 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+%\bibliographystyle{plain}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{amsmath}
+%\allowdisplaybreaks % to keep equations from hitting page numbers
+% \usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{caption} 
+\captionsetup[table]{skip=10pt}
+% \usepackage{fullpage}
+\usepackage{subfigure}
+% \usepackage[normalem]{ulem}
+% % \usepackage[framed]{mcode}	% Matlab-kode i dokumentet. Google "mcode"
+\usepackage{placeins} % Holder bilder borte fra matlab-koden min! \FloatBarrier over og under
+% \usepackage{listings}
+% \usepackage{color}
+% \usepackage{textcomp}
+% \lstset{
+% 	language=[Visual]C++,
+% 	keywordstyle=\bfseries\ttfamily\color[rgb]{0,0,1},
+% 	identifierstyle=\ttfamily,
+% 	commentstyle=\color[rgb]{0.133,0.545,0.133},
+% 	stringstyle=\ttfamily\color[rgb]{0.627,0.126,0.941},
+% 	showstringspaces=false,
+% 	basicstyle=\small,
+% 	numberstyle=\footnotesize,
+% 	numbers=left,
+% 	stepnumber=1,
+% 	numbersep=10pt,
+% 	tabsize=4,
+% 	breaklines=true,
+% 	prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+% 	breakatwhitespace=false,
+% 	aboveskip={1.5\baselineskip},
+% 	columns=fixed,
+% 	upquote=true,
+% 	extendedchars=true,
+%  	frame=single,
+% }
+
+% \setlength{\parindent}{0in}
+
+% New definition of square root:
+% Rename \sqrt as \oldsqrt
+\let\oldsqrt\sqrt
+% Define the new \sqrt in terms of the old one
+\def\sqrt{\mathpalette\DHLhksqrt}
+\def\DHLhksqrt#1#2{%
+\setbox0=\hbox{$#1\oldsqrt{#2\,}$}\dimen0=\ht0
+\advance\dimen0-0.3\ht0
+\setbox2=\hbox{\vrule height\ht0 depth -\dimen0}%
+{\box0\lower0.4pt\box2}}
+
+\newcommand{\bvec}[1]{\mathbf{#1}}
+% % \newcommand{\stimes}{{\times}}
+% \newcommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+% 
+% \newcommand{\up}{\uparrow}
+% \newcommand{\dw}{\downarrow}
+% \newcommand{\stack}[2]{\array{c}{\scriptstyle #1}\\[-1.1ex]{\scriptstyle #2}\endarray}
+
+
+\title{Report FYS4460 - Project 1}
+\author{Filip Sund \\ filipsu@fys.uio.no}
+\date{Spring 2013}
+
+\begin{document}
+\maketitle{}
+
+%\setcounter{equation}{1}
+\input{report_text}
+% \newpage
+% \input{report_code}
+%\bibliography{references}
+\end{document}
+
+%\begin{figure}[h!]
+	%\centering
+	%\includegraphics[width =.30\textwidth]{bilder/a_exp_plot.eps}
+	%\parbox{5in} {
+		%\caption{
+			%\small{
+				%Plot of $e^{-4x}$ to find the appropriate limits for the integration.
+			%}
+			%\label{fig:a_exp_plot}
+		%}
+	%}
+%\end{figure}
+
+%\begin{figure}
+	%\begin{center}
+		%\makebox[\textwidth] {
+			%\subfigure[] {
+				%\label{fig:7a}
+				%\includegraphics[width =.60\textwidth]{bilder/b_eigen0}
+			%}
+			%\subfigure[] {
+				%\label{fig:7b}
+				%\includegraphics[width =.60\textwidth]{bilder/b_eigen1}
+			%}
+		%}
+		%\parbox{5in} {
+			%\caption{
+				%\small{
+					%Bildetekst.
+				%}
+				%\label{fig:7}
+			%}
+		%}
+	%\end{center}
+%\end{figure}
+
+% \begin{figure}
+% 	\begin{center}
+% 	\makebox[\textwidth] {
+% 		\subfigure[] {
+% 			\label{fig:ca1}
+% 			\includegraphics[width =.60\textwidth]{bilder/c_stability0.01}
+% 		}
+% 		\subfigure[] {
+% 			\label{fig:ca2}
+% 			\includegraphics[width =.60\textwidth]{bilder/c_stability0.5}
+% 		}
+% 	}
+% 	\makebox[\textwidth]
+% 	{
+% 		\subfigure[] {
+% 			\label{fig:ca3}
+% 			\includegraphics[width =.60\textwidth]{bilder/c_stability1.0}
+% 		}
+% 		\subfigure[] {
+% 			\label{fig:ca4}
+% 			\includegraphics[width =.60\textwidth]{bilder/c_stability5.0}
+% 		}
+% 	}
+% 	\parbox{5in} {
+% 		\caption {
+% 			\small {
+% 				Bildetekst.
+% 			}
+% 			\label{fig:ca}
+% 		}
+% 	}
+% 	\end{center}
+% \end{figure}
