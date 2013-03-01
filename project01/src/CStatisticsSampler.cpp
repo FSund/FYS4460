@@ -148,6 +148,7 @@ imat CStatisticsSampler::pairCorrelation()
     for (int i = 0; i < nBins; i++)
         fprintf(pairCorrelationFile, "%d ", count(i));
     fprintf(pairCorrelationFile, " \n ");
+
     return count;
 }
 

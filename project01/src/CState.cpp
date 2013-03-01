@@ -447,6 +447,14 @@ void CState::berendsen(const double Tbath, const double T, const double tt)
     double gamma = sqrt(1 + tt*(Tbath/T - 1));
     vec3 velocity;
 
+    if(!isfinite(gamma)) {
+        cout << endl;
+        cout << "! You're trying to use the berendsen thermostat without having sampled ";
+        cout << "the temperature with the statistics sampler. This will give ";
+        cout << "infinite velocities...! Exiting now." << endl << endl;
+        exit(1);
+    }
+
     for (int i = 0; i < nAtoms; i++)
     {
         velocity = atoms[i]->getVelocity();
