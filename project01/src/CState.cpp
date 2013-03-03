@@ -186,7 +186,7 @@ void CState::randuVelocity(double mean, double vmax, long *seed)
     }
 }
 
-void CState::save(string filename, bool forces, bool indexing)
+void CState::save(string filename, bool saveForces, bool indexing)
 {
     // // check and fix the extension of the filename
     // if (filename.substr(filename.find_last_of(".")) != ".xyz")
@@ -200,10 +200,18 @@ void CState::save(string filename, bool forces, bool indexing)
     ofstream ofile;
     ofile.open(filename.c_str());
 
+    if (!ofile)
+    {
+        cout << endl;
+        cout << "! It seems like the '.xyz'-file couldn't be created. ";
+        cout << "No .xyz-files will be saved. Please fix the folder or filename and rerun if you ";
+        cout << "want to save these files." << endl << endl;
+        return;
+    }
+
     ofile << nAtoms << endl;
     ofile << "Comment" << endl;
 
-    //ofile.setf(ios::right); // I have no idea what this might do
     for (int i = 0; i < nAtoms; i++) {
         ofile << elements[i];
         //ofile << scientific; // uncomment if you want "0.000000e+00" formatting
@@ -216,7 +224,7 @@ void CState::save(string filename, bool forces, bool indexing)
         {
             ofile << setw(16) << setprecision(8) << (atoms[i]->getVelocity()(j))*(L0/t0);
         }
-        if (forces)
+        if (saveForces)
         {
             for (int j = 0; j < 3; j++)
             {

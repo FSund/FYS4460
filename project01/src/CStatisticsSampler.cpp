@@ -14,12 +14,26 @@ CStatisticsSampler::CStatisticsSampler(const CState &state_):
         initPos.col(i) = state->getAtom(i).getPosition();
     }
 
-    temperatureFile = fopen("./output/temperature.dat","w");
-    pressureFile = fopen("./output/pressure.dat","w");
-    energyFile = fopen("./output/energy.dat","w");
-    velocityFile = fopen("./output/velocity.dat","w");
-    diffusionFile = fopen("./output/diffusion.dat","w");
-    pairCorrelationFile = fopen("./output/pairCorrelation.dat", "w");
+    if (!fopen("./output/test.dat","w"))
+    {
+        cout << endl;
+        cout << "! It seems like the folder 'output' is missing in the folder where the executable ";
+        cout << "is located. No statistics data will be saved. Please create the folder and rerun if you want ";
+        cout << "to store the statistics data." << endl << endl;
+        outputFolderExists = 0;
+    }
+    else
+    {
+        outputFolderExists = 1;
+        remove("./output/test.dat");
+
+        temperatureFile = fopen("./output/temperature.dat","w");
+        pressureFile = fopen("./output/pressure.dat","w");
+        energyFile = fopen("./output/energy.dat","w");
+        // velocityFile = fopen("./output/velocity.dat","w");
+        diffusionFile = fopen("./output/diffusion.dat","w");
+        pairCorrelationFile = fopen("./output/pairCorrelation.dat", "w");
+    }
 }
 
 void CStatisticsSampler::sample(
@@ -34,12 +48,15 @@ void CStatisticsSampler::sample(
     P = pressure(MDunits);
     rsquared = diffusion(MDunits);
 
-    fprintf(energyFile, "%f %f %f \n", t, K, U);
-    fprintf(temperatureFile, "%f %f \n", t, T);
-    fprintf(pressureFile, "%f %f \n", t, P);
-    fprintf(diffusionFile, "%f %f \n", t, rsquared);
+    if (outputFolderExists)
+    {
+        fprintf(energyFile, "%f %f %f \n", t, K, U);
+        fprintf(temperatureFile, "%f %f \n", t, T);
+        fprintf(pressureFile, "%f %f \n", t, P);
+        fprintf(diffusionFile, "%f %f \n", t, rsquared);
 
-    fflush(0); // flush files (write now instead of waiting for program to finish)
+        fflush(0); // flush files (write now instead of waiting for program to finish)
+    }
 }
 
 double CStatisticsSampler::kineticEnergy(bool MDunits)
@@ -119,9 +136,13 @@ void CStatisticsSampler::initialize_pairCorrelation(int nBins_, bool MDunits)
         bins(i) = i*L_bins;
 
     if (!MDunits) bins *= L0;
-    for (int i = 0; i < nBins; i++)
-        fprintf(pairCorrelationFile, "%f ", bins(i));
-    fprintf(pairCorrelationFile, " \n");
+
+    if (outputFolderExists)
+    {
+        for (int i = 0; i < nBins; i++)
+            fprintf(pairCorrelationFile, "%f ", bins(i));
+        fprintf(pairCorrelationFile, " \n");
+    }
 }
 
 imat CStatisticsSampler::pairCorrelation()
@@ -145,9 +166,12 @@ imat CStatisticsSampler::pairCorrelation()
         }
     }
 
-    for (int i = 0; i < nBins; i++)
-        fprintf(pairCorrelationFile, "%d ", count(i));
-    fprintf(pairCorrelationFile, " \n ");
+    if (outputFolderExists)
+    {
+        for (int i = 0; i < nBins; i++)
+            fprintf(pairCorrelationFile, "%d ", count(i));
+        fprintf(pairCorrelationFile, " \n ");
+    }
 
     return count;
 }
@@ -179,13 +203,24 @@ mat CStatisticsSampler::pairCorrelation_manual(string filename, bool MDunits, in
         g *= L0;
     g.col(1) = conv_to<mat>::from(count);
 
-    FILE* manualPairCorrelationFile = fopen(filename.c_str(), "w");
+    if (outputFolderExists)
+    {
+        FILE* manualPairCorrelationFile = fopen(filename.c_str(), "w");
 
-    for (int i = 0; i < nBins_; i++)
-        fprintf(manualPairCorrelationFile, "%f ", g(i,0));
-    for (int i = 0; i < nBins_; i++)
-        fprintf(manualPairCorrelationFile, "%d ", count(i));
-    fprintf(manualPairCorrelationFile, " \n");
+        for (int i = 0; i < nBins_; i++)
+            fprintf(manualPairCorrelationFile, "%f ", g(i,0));
+        for (int i = 0; i < nBins_; i++)
+            fprintf(manualPairCorrelationFile, "%d ", count(i));
+        fprintf(manualPairCorrelationFile, " \n");
+    }
+    else
+    {
+        cout << endl;
+        cout << "! It seems like the folder 'output' is missing in the folder where the executable ";
+        cout << "is located, so the pair correlation data from 'pairCorrelation_manual()' can't be ";
+        cout << "saved. Please create the folder and rerun the program if you want to save this.";
+        cout << endl << endl;
+    }
 
     return g;
 }

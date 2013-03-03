@@ -11,7 +11,7 @@ void MainApplication::runApplication(int argc, char *argv[])
 
     if (argc != 11)
     {
-        cout << "Usage: dt nSteps T(MD) thermostat#(0,1,2) Tbath(MD) tau L(SI) N calculateStatistics saveStates" << endl;
+        cout << endl << "! Usage: 'dt nSteps T(MD) thermostat#(0,1,2) Tbath(MD) tau L(SI) N calculateStatistics saveStates'" << endl;
         if (argc == 1)
         {
             dt = 0.005;
@@ -21,11 +21,11 @@ void MainApplication::runApplication(int argc, char *argv[])
             Tbath = 3.0;
             tau = 15;
             L = 5.260;
-            N = 12;
+            N = 10;
             calculateStatistics = 1;
-            saveStates = 1;
+            saveStates = 0;
 
-            cout << "Using default of: dt = " << dt << ", nSteps = " << nSteps << ", T = " << T
+            cout << endl << "! Using default of: dt = " << dt << ", nSteps = " << nSteps << ", T = " << T
                  << ", thermostat# = " << thermostat << ", Tbath = " << Tbath
                  << ", tau = " << tau << ", L = " << L
                  << ", N = " << N << ", statistics? = " << calculateStatistics
@@ -63,22 +63,23 @@ void MainApplication::runApplication(int argc, char *argv[])
 
     for (int i = 0; i < nSteps; i++)
     {
-        cout << "n = " << i << endl;
+        if (i%50==0) cout << "n = " << i << " of " << nSteps << endl;
+
         filename.str(string());
         filename << "./output/states/state." << setfill('0') << setw(4) << i << ".xyz";
 
         if (saveStates) state.save(filename.str(), 1, 1);
 
         if (calculateStatistics) sampler.sample(state, 1, dt*i);
-        //if (i>250) sampler.pairCorrelation();
+//        if (i>250) sampler.pairCorrelation();
 
-        if (thermostat == 1) state.berendsen(Tbath, sampler.T, tt);
+        if (thermostat == 1 && calculateStatistics) state.berendsen(Tbath, sampler.T, tt);
         else if (thermostat == 2) state.andersen(Tbath, tt, &seed);
 
         state.move(dt, calculateStatistics);
     }
     sampler.sample(state, 1, nSteps*dt);
-    sampler.pairCorrelation_manual("./output/pairCorrelation_final", 1, 200);
+    sampler.pairCorrelation_manual("./output/pairCorrelation_final.dat", 1, 200);
 }
 
 CState MainApplication::initialize(double T_, double L_, int N_, long* seed)
