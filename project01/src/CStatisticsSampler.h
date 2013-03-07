@@ -35,6 +35,7 @@ public:
     FILE *energyFile;
     FILE *diffusionFile;
     FILE *pairCorrelationFile;
+    bool outputFolderExists;
 
     int nAtoms;
     int nBoxes;
