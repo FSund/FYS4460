@@ -32,7 +32,7 @@ public:
     double getPressure() const;
     ivec3 getBoundaryCrossings() const;
 
-    vec3 getNewPosition() const;
+//    vec3 getNewPosition() const;
     vec3 getNewVelocity() const;
     vec3    getNewForce() const;
 
@@ -57,6 +57,8 @@ public:
     void forward();
     void resetStatistics();
     ~CAtom();
+
+    const vec3 &getNewPosition();
 protected:
     vec3 position;
     vec3 velocity;
@@ -75,10 +77,25 @@ protected:
     double newPressure;
 
     ivec3 boundaryCrossings;
-
-    // linked list stuff
-//    CAtom* nextAtom;
-//    CAtom* prevAtom;
 };
+
+// inline stuff for better performance
+inline const vec3 &CAtom::getNewPosition()
+{
+    return newposition;
+}
+
+inline void CAtom::addToNewForce(const vec3 &addForce)
+{
+    newforce(0) += addForce(0);
+    newforce(1) += addForce(1);
+    newforce(2) += addForce(2);
+}
+
+inline void CAtom::addToNewStatistics(const double addPot, const double addPressure)
+{
+    newPotEn    += addPot;
+    newPressure += addPressure;
+}
 
 #endif // CATOM_H

@@ -92,8 +92,8 @@ void CBox::findNeighbours(const vec3 &systemSize)
                 alreadyInList = 0;
                 for (int j = 0; j < i; j++)
                 {
-                    if (conv_to<int>::from(sum(boxIndex == neighbourIndices.col(j))) == 3) // if the compiler gives you trouble here, use the line below instead
-                    //if (sum(boxIndex == neighbourIndices.col(j)) == 3)
+                    //if (conv_to<int>::from(sum(boxIndex == neighbourIndices.col(j))) == 3) // if the compiler gives you trouble here, use the line below instead
+                    if (sum(boxIndex == neighbourIndices.col(j)) == 3)
                     {
                         alreadyInList = 1;
                         continue; // break out of this for loop
@@ -280,7 +280,7 @@ void CBox::calculateForces(const vector<CBox*> boxes)
 
             dr2 = drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2);
             dr6 = dr2*dr2*dr2;
-            LJ = 24*(2.0 - dr6)/(dr6*dr6*dr2);
+            LJ = 24.0*(2.0 - dr6)/(dr6*dr6*dr2);
 
             //dr12_inv = 1.0/(dr6*dr6);
             //LJ = 24*(2.0 - dr6)*dr12_inv/dr2;
@@ -395,7 +395,7 @@ void CBox::calculateForcesAndStatistics(const vector<CBox*> boxes)
 
             dr2 = drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2);
             dr6 = dr2*dr2*dr2;
-            LJ = 24*(2.0 - dr6)/(dr6*dr6*dr2);
+            LJ = 24.0*(2.0 - dr6)/(dr6*dr6*dr2);
 
             //dr12_inv = 1.0/(dr6*dr6);
             //LJ = 24*(2.0 - dr6)*dr12_inv/dr2;

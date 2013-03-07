@@ -29,7 +29,7 @@ public:
     void randnVelocity(double mean, double sigma, long *seed);
     void randuVelocity(double mean, double vmax, long *seed);
 
-    void save(string filename, bool forces, bool indexing);
+    void save(string filename, bool saveForces, bool indexing);
     void saveVelocity(string filename, bool MDUnits);
     void load(string filename);
 
@@ -44,10 +44,12 @@ public:
     int getnAtoms() const;
     int getnBoxes() const;
     vec3 getSize() const;
-    CAtom getAtom(int i) const;
-    CBox getBox(int i) const;
-    vector<CAtom*> getAtoms() const;
-    vector<CBox*> getBoxes() const;
+    const CAtom &getAtom(int i) const;
+
+    // unused
+//    CBox getBox(int i) const;
+//    vector<CAtom*> getAtoms() const;
+//    vector<CBox*> getBoxes() const;
 
     friend class MainApplication;
 protected:
@@ -70,5 +72,11 @@ protected:
     double kinetic;
     double potential;
 };
+
+// inline stuff for better performance
+inline const CAtom &CState::getAtom(int i) const
+{
+    return *atoms[i];
+}
 
 #endif // CSTATE_H

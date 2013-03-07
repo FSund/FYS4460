@@ -426,6 +426,7 @@ void CState::newForces()
     // then we find the forces between all atoms in the box of each atom on the
     // atom itself, and the force from all boxes on all atoms, remembering
     // Newton's third law
+    #pragma omp parallel for
     for (int i = 0; i < nBoxes; i++)
         boxes[i]->calculateForces(boxes);
 }
@@ -540,22 +541,26 @@ vec3 CState::getSize() const
     return size;
 }
 
-CAtom CState::getAtom(int i) const
-{
-    return *atoms[i];
-}
+/* Inlined in header file*/
 
-vector<CAtom*> CState::getAtoms() const
-{
-    return atoms;
-}
+//const CAtom &CState::getAtom(int i) const
+//{
+//    return *atoms[i];
+//}
 
-vector<CBox*> CState::getBoxes() const
-{
-    return boxes;
-}
+/* Unused stuff */
 
-CBox CState::getBox(int i) const
-{
-    return *boxes[i];
-}
+//vector<CAtom*> CState::getAtoms() const
+//{
+//    return atoms;
+//}
+
+//vector<CBox*> CState::getBoxes() const
+//{
+//    return boxes;
+//}
+
+//CBox CState::getBox(int i) const
+//{
+//    return *boxes[i];
+//}

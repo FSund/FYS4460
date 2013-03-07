@@ -15,13 +15,13 @@ void MainApplication::runApplication(int argc, char *argv[])
         if (argc == 1)
         {
             dt = 0.005;
-            nSteps = 500;
-            T = 1.0;
+            nSteps = 200;
+            T = 1.7; // to get 0.851
             thermostat = 1;
-            Tbath = 3.0;
+            Tbath = 0.851;
             tau = 15;
-            L = 5.260;
-            N = 10;
+            L = 5.720;
+            N = 20;
             calculateStatistics = 1;
             saveStates = 0;
 
@@ -59,8 +59,7 @@ void MainApplication::runApplication(int argc, char *argv[])
 
     ostringstream filename;
 
-//    state.load("./output/states/final_T5.5_N1000_dt0.005.xyz");
-
+//    state.load("./output/states/state.1000.xyz");
     for (int i = 0; i < nSteps; i++)
     {
         if (i%50==0) cout << "n = " << i << " of " << nSteps << endl;
@@ -79,7 +78,11 @@ void MainApplication::runApplication(int argc, char *argv[])
         state.move(dt, calculateStatistics);
     }
     sampler.sample(state, 1, nSteps*dt);
-    sampler.pairCorrelation_manual("./output/pairCorrelation_final.dat", 1, 200);
+//    filename.str(string());
+//    filename << "./output/states/state." << setfill('0') << setw(4) << nSteps << ".xyz";
+//    state.save(filename.str(), 0, 0);
+
+//    sampler.pairCorrelation_manual("./output/pairCorrelation_final.dat", 1, 200);
 }
 
 CState MainApplication::initialize(double T_, double L_, int N_, long* seed)

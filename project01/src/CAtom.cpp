@@ -66,10 +66,11 @@ ivec3 CAtom::getBoundaryCrossings() const
     return boundaryCrossings;
 }
 
-vec3 CAtom::getNewPosition() const
-{
-    return newposition;
-}
+/* Inlined in header file*/
+//vec3 CAtom::getNewPosition() const
+//{
+//    return newposition;
+//}
 
 vec3 CAtom::getNewVelocity() const
 {
@@ -98,19 +99,22 @@ void CAtom::setVelocity(const vec3 &newVelocity)
     velocity = newVelocity;
 }
 
+/* Unused */
 //void CAtom::setForce(const vec3 &newForce)
 //{
 //    force = newForce;
 //}
 
-void CAtom::addToNewForce(const vec3 &addForce)
-{
-    //newforce += addForce;
-    newforce(0) += addForce(0);
-    newforce(1) += addForce(1);
-    newforce(2) += addForce(2);
-}
+/* Inlined in header file*/
+//void CAtom::addToNewForce(const vec3 &addForce)
+//{
+//    //newforce += addForce;
+//    newforce(0) += addForce(0);
+//    newforce(1) += addForce(1);
+//    newforce(2) += addForce(2);
+//}
 
+/* Inlined in header file*/
 //void CAtom::addToNewPotEn(const double &addPot)
 //{
 //    newPotEn += addPot;
@@ -131,6 +135,7 @@ void CAtom::setNewForce(const vec3 &newNewForce)
     newforce = newNewForce;
 }
 
+/* Unused*/
 //void CAtom::setNewPotEn(const double &newNewPotEn)
 //{
 //    newPotEn = newNewPotEn;
@@ -155,11 +160,12 @@ void CAtom::addToBoundaryCrossings(const ivec3 addBoundaryCrossings)
     boundaryCrossings += addBoundaryCrossings;
 }
 
-void CAtom::addToNewStatistics(const double addPot, const double addPressure)
-{
-    newPotEn    += addPot;
-    newPressure += addPressure;
-}
+/* Inlined in header file*/
+//void CAtom::addToNewStatistics(const double addPot, const double addPressure)
+//{
+//    newPotEn    += addPot;
+//    newPressure += addPressure;
+//}
 
 void CAtom::forward()
 {
