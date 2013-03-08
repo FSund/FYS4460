@@ -279,18 +279,18 @@ where $D$ is the diffusion constant. See figure \ref{fig:n} for a plot of the di
 \end{figure}
 
 \subsection*{The diffusion constant}
-The radial distribution function $g(r)$ is the radial probability for finding another atom at a distance $r$ from an arbitrary atom. We have measured this by dividing the distance between atoms into intervals (bins), and looping over all atoms while finding the distances to all other atoms. The result can be seen in figure \ref{fig:o}, where we have averaged the function for 50 time-steps, and tested both a liquid and solid phase. We see that the distribution is very smooth in the liquid phase, as one would expect, and a bit jagged in the solid phase.
+The radial distribution function $g(r)$ is the radial probability for finding another atom at a distance $r$ from an arbitrary atom. We have measured this by dividing the distance between atoms into intervals (bins), and looping over all atoms while finding the distances to all other atoms, and then normalizing with the volume of each bin. The result can be seen in figure \ref{fig:o}, where we have averaged the function for 50 time-steps, and tested both a liquid and solid phase. We see that the distribution behaves as expected for both phases, with a area with no neighbouring atoms close to the atom caused by the Lennard-Jones repulsion, and then a peak from the closest atoms, caused by the Lennard-Jones attraction. For the liquid we see that the number of atoms becomes independent on the distance to the core, with a fall-off caused by the measuring method and the periodic boundary conditions. In the solid phase we see a much more jagged behaviour, which is because the atoms are much more fixed in their positions.
 
 \begin{figure}
   \begin{center}
   \makebox[\textwidth] {
       \subfigure[] {
           \label{fig:o1}
-          \includegraphics[width =.70\textwidth]{bilder/o_plot02.eps}
+          \includegraphics[width =.70\textwidth]{bilder/o_plot_solid.eps}
       }
       \subfigure[] {
           \label{fig:o2}
-          \includegraphics[width =.70\textwidth]{bilder/o_plot01.eps}
+          \includegraphics[width =.70\textwidth]{bilder/o_plot_liquid.eps}
       }
   }
   \parbox{5in} {
