@@ -15,7 +15,7 @@ private:
     const CState* state;
 public:
     CStatisticsSampler(const CState &state);
-    void sample(const CState &state, bool MDunits, const double t);
+    void sample(const CState &state, bool MDunits, const double t, bool save=1);
 
     double kineticEnergy(bool MDunits);
     double potentialEnergy(bool MDunits);
@@ -38,6 +38,8 @@ public:
     bool outputFolderExists;
 
     int nAtoms;
+    int nMatrixAtoms;
+    int nMovingAtoms;
     int nBoxes;
     vec3 systemDim;
     double volume;

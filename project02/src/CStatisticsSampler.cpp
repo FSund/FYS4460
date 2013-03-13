@@ -3,16 +3,14 @@
 CStatisticsSampler::CStatisticsSampler(const CState &state_):
     state(&state_),
     nAtoms(state->getnAtoms()),
+    nMatrixAtoms(state->getnMatrixAtoms()),
+    nMovingAtoms(state->getnMovingAtoms()),
     nBoxes(state->getnBoxes()),
     systemDim(state->getSize()),
     volume(prod(systemDim)),
     rho(nAtoms/volume)
 {
     initPos = mat(3, nAtoms);
-    for (int i = 0; i < nAtoms; i++)
-    {
-        initPos.col(i) = state->getAtom(i).getPosition();
-    }
 
     if (!fopen("./output/test.dat","w"))
     {
@@ -39,7 +37,8 @@ CStatisticsSampler::CStatisticsSampler(const CState &state_):
 void CStatisticsSampler::sample(
         const CState &state_,
         const bool MDunits,
-        const double t)
+        const double t,
+        bool save)
 {
     state = &state_;
     K = kineticEnergy(MDunits);
@@ -48,7 +47,7 @@ void CStatisticsSampler::sample(
     P = pressure(MDunits);
     rsquared = diffusion(MDunits);
 
-    if (outputFolderExists)
+    if (outputFolderExists && save)
     {
         fprintf(energyFile, "%f %f %f \n", t, K, U);
         fprintf(temperatureFile, "%f %f \n", t, T);
@@ -91,6 +90,7 @@ double CStatisticsSampler::potentialEnergy(bool MDunits)
 double CStatisticsSampler::temperature(bool MDunits)
 {
     T = 2.0*K/(3.0*nAtoms); // MD units
+    T = 2.0*K/(3.0*nMovingAtoms);
 
     if (MDunits) return T; // MD units
     else return T*T0; // SI units
@@ -116,11 +116,15 @@ double CStatisticsSampler::diffusion(bool MDunits)
     rsquared = 0.0;
     for (int i = 0; i < nAtoms; i++)
     {
-        dr = state->getAtom(i).getPosition() - initPos.col(i);
-        dr += state->getAtom(i).getBoundaryCrossings()%systemDim;;
-        rsquared += dr(0)*dr(0) + dr(1)*dr(1) + dr(2)*dr(2);
+        if (!state->getAtom(i).matrixAtom)
+        {
+            dr = state->getAtom(i).getPosition() - initPos.col(i);
+            dr += state->getAtom(i).getBoundaryCrossings()%systemDim;;
+            rsquared += dr(0)*dr(0) + dr(1)*dr(1) + dr(2)*dr(2);
+        }
     }
-    rsquared /= nAtoms;
+//    rsquared /= nAtoms;
+    rsquared /= nMovingAtoms;
 
     if (MDunits) return rsquared;
     else return rsquared*L0*L0;

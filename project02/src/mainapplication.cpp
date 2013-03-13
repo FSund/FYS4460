@@ -248,9 +248,9 @@ void MainApplication::porous_system2()
     double interactionlength = 3.0;
 
     CState state("N20_at_T0.845.xyz", N, L, interactionlength);
+
     state.generate_spherical_pores(&seed, 20, 20.0, 30.0);
     state.remove_half_the_atoms();
-//    generate_pores(state, &seed);
     state.saveMatrix("./output/states/matrix.xyz");
 
     CStatisticsSampler sampler(state);
@@ -269,6 +269,70 @@ void MainApplication::porous_system2()
 
         state.save(filename.str(), 0, 0, 0, 0);
         state.move(dt, calculateStatistics);
+    }
+}
+
+void MainApplication::porous_system3()
+{
+    cout << "MainApplication::porous_system3" << endl;
+
+    double dt = 0.005;
+    int nSteps = 1000;
+    double Tbath = 1.5;
+    int calculateStatistics = 1;
+    long seed = -1;
+    double tt = 1.0/10;
+
+    double L_ = 5.720/L0;
+    int N_ = 20;
+
+    ostringstream filename;
+
+    vec3 L;
+    ivec3 N;
+    L << L_ << L_ << L_;
+    N << N_ << N_ << N_;
+    double interactionlength = 3.0;
+
+    CState state("N20_at_T0.845.xyz", N, L, interactionlength);
+
+    state.generate_cylindrical_pore(20.0);
+//    state.generate_spherical_pores(&seed, 50, 20, 30);
+//    state.FILIP_pores();
+    state.remove_half_the_atoms();
+    state.saveMatrix("./output/states/matrix.xyz");
+
+    CStatisticsSampler sampler(state);
+    sampler.initialize_pairCorrelation(200, 1);
+    sampler.sample(state, 1, 0, 1);
+    cout << "Initial temp = " << sampler.T << endl;
+
+    for (int i = 0; i < nSteps; i++)
+    {
+        if (i%25==0) cout << "n = " << i << " of " << nSteps << endl;
+
+        filename.str(string());
+        filename << "./output/states/state." << setfill('0') << setw(4) << i << ".xyz";
+
+        sampler.sample(state, 1, dt*i, 1);
+        cout << "T (before thermostat) = " << sampler.T << endl;
+        if (i < 100) state.berendsen(Tbath, sampler.T, tt);
+//        sampler.sample(state, 1, dt*i, 0);
+//        cout << "T (after thermostat)  = " << sampler.T << endl;
+
+        state.save(filename.str(), 0, 0, 0, 0);
+        state.move(dt, calculateStatistics);
+
+//        vec3 vel;
+//        for (int i = 0; i < state.getnAtoms(); i++)
+//        {
+//            if (state.getAtom(i).matrixAtom)
+//            {
+//                vel = state.getAtom(i).getVelocity();
+//                if (norm(vel, 2) != 0)
+//                    cout << vel.t();
+//            }
+//        }
     }
 }
 
@@ -293,4 +357,3 @@ CState MainApplication::initialize(double T_, double L_, int N_, long* seed)
 
     return state;
 }
-

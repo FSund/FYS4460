@@ -12,6 +12,7 @@ const double F0 = .30303;   // eV
 const double E0 = 0.01038;  // eV
 const double T0 = 119.74;   // K
 const double pi = atan(1)*4;
+const double forcemax = 100000; // MD units
 
 using namespace std;
 using namespace arma;
@@ -24,6 +25,7 @@ class CAtom
 public:
     CAtom();
     CAtom(const vec3 &position, const vec3 &velocity);
+    CAtom(const vec3 &position, const vec3 &velocity, string atomType_);
 
     vec3   getPosition() const;
     vec3   getVelocity() const;
@@ -33,36 +35,38 @@ public:
     ivec3 getBoundaryCrossings() const;
 
 //    vec3 getNewPosition() const;
-    vec3 getNewVelocity() const;
+//    vec3 getNewVelocity() const;
     vec3    getNewForce() const;
 
-    void setPosition(const vec3 &newPosition);
-    void setVelocity(const vec3 &newVelocity);
+    void setPosition(const vec3 &position_);
+    void setVelocity(const vec3 &velocity_);
 //    void    setForce(const vec3 &newForce);
 
-    void setNewPosition(const vec3 &newNewPosition);
+    void setNewPosition(const vec3 &newPosition_);
     void setNewVelocity(const vec3 &newNewVelocity);
     void    setNewForce(const vec3 &newNewForce);
 //    void    setNewPotEn(const double &newNewPotEn);
 
     void addToNewForce(const vec3 &addForce);
+    void checkForceCutoff();
 //    void addToNewPotEn(const double &addPot);
     void addToBoundaryCrossings(const ivec3 addBoundaryCrossings);
     void addToNewStatistics(const double addPot, const double addPressure);
 
-    void getData(vec3 &Position, vec3 &Velocity, vec3 &Force);
-    void setData(const vec3 &newPosition, const vec3 &newVelocity, const vec3 &newForce);
-    void setNewData(const vec3 &newNewPosition, const vec3 &newNewVelocity, const vec3 &newNewForce);
+    void getData(vec3 &position_, vec3 &velocity_, vec3 &force_);
+//    void setData(const vec3 &newPosition, const vec3 &newVelocity, const vec3 &newForce);
+//    void setNewData(const vec3 &newNewPosition, const vec3 &newNewVelocity, const vec3 &newNewForce);
 
 //    void setMatrixAtom();
-    void setAtomType(const string &atomType_);
+    int setAtomType(const string &atomType_);
     string getAtomType() const;
     void forward();
     void resetStatistics();
     ~CAtom();
 
     const vec3 &getNewPosition();
-protected:
+//protected:
+public:
     vec3 position;
     vec3 velocity;
     vec3 force;

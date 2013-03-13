@@ -294,6 +294,10 @@ void CBox::calculateForces(const vector<CBox*> &boxes)
             force(1) += forceComponent(1);
             force(2) += forceComponent(2);
 
+            ////
+            if (!isfinite(force(0))) cout << "! infinite force, atoms in box = " << force.t();
+            ////
+
             // using Newton's third law for the opposite force
             atomList2->item->addToNewForce(-forceComponent);
 
@@ -415,8 +419,7 @@ void CBox::calculateForcesAndStatistics(const vector<CBox*> &boxes)
             pressureSum += pressureComp;
 
             ////
-            //if (!isfinite(force(0))) cout << "! infinite force, atoms in box = " << force.t();
-            if (!isfinite(force(0))) cout << drvec.t();
+            if (!isfinite(force(0))) cout << "! infinite force, atoms in box = " << force.t();
             ////
 
             // using Newton's third law for the opposite force
@@ -449,6 +452,7 @@ void CBox::flush()
     empty = 1;
     atomPtrList.next = 0;
     atomPtrList.item = 0;
+    nAtoms = 0;
 }
 
 vec3 CBox::forceFromBox(const vec3 &r0) const
@@ -516,6 +520,7 @@ void CBox::forceFromBox(
     while (atomList != 0)
     {
         r = atomList->item->getNewPosition();
+
         drvec = r0 - r;
         dr2 = drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2);
 

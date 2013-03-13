@@ -20,6 +20,7 @@ public:
     void porous_system_d();
     void porous_system();
     void porous_system2();
+    void porous_system3();
 private:
     CState initialize(double T_, double L_, int N_, long *seed);
 

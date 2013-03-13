@@ -26,6 +26,19 @@ CAtom::CAtom(const vec3 &position, const vec3 &velocity):
     // ('position' and 'velocity'). This doesn't do implicit conversions
 }
 
+CAtom::CAtom(const vec3 &position, const vec3 &velocity, string atomType_):
+    position(position),
+    velocity(velocity),
+    force(zeros<vec>(3)),
+    potEn(0.0),
+    pressure(0.0),
+    boundaryCrossings(zeros<ivec>(3,1)),
+    matrixAtom(0),
+    atomType(atomType_)
+{
+    setAtomType(atomType_);
+}
+
 //CAtom::CAtom(vec3 position = zeros(3), vec3 velocity = zeros(3)):r(position),v(velocity)
 //{
 //    // smart and efficient constructor that assigns 'r' and 'v' meaningful values
@@ -68,38 +81,46 @@ ivec3 CAtom::getBoundaryCrossings() const
     return boundaryCrossings;
 }
 
-/* Inlined in header file*/
+/* Inlined in header file !!!*/
+
 //vec3 CAtom::getNewPosition() const
 //{
 //    return newposition;
 //}
 
-vec3 CAtom::getNewVelocity() const
-{
-    return newvelocity;
-}
+/* Unused */
+//vec3 CAtom::getNewVelocity() const
+//{
+//    return newvelocity;
+//}
 
 vec3 CAtom::getNewForce() const
 {
     return newforce;
 }
 
-void CAtom::getData(vec3 &Position, vec3 &Velocity, vec3 &Force)
+void CAtom::getData(vec3 &position_, vec3 &velocity_, vec3 &force_)
 {
-    Position = position;
-    Velocity = velocity;
-    Force = force;
+    position_ = position;
+    velocity_ = velocity;
+    force_ = force;
 }
 
-void CAtom::setPosition(const vec3 &newPosition)
+void CAtom::setPosition(const vec3 &position_)
 {
-    position = newPosition;
+    if (matrixAtom)
+        cout << "! ny setPosition for matrixAtom !" << endl;
+    position = position_;
 }
 
-void CAtom::setVelocity(const vec3 &newVelocity)
+void CAtom::setVelocity(const vec3 &velocity_)
 {
-    if (!matrixAtom)
-        velocity = newVelocity;
+//    if (matrixAtom && norm(velocity_, 2) != 0)
+//    {
+//        cout << "! setVelocity for matrixAtom !" << endl;
+//        cout << velocity_.t();
+//    }
+    velocity = velocity_;
 }
 
 /* Unused */
@@ -123,19 +144,27 @@ void CAtom::setVelocity(const vec3 &newVelocity)
 //    newPotEn += addPot;
 //}
 
-void CAtom::setNewPosition(const vec3 &newNewPosition)
+void CAtom::setNewPosition(const vec3 &newPosition_)
 {
-    newposition = newNewPosition;
+//    if (matrixAtom)
+//        cout << "! setNewPosition() for matrixAtom !" << endl;
+    newposition = newPosition_;
 }
 
-void CAtom::setNewVelocity(const vec3 &newNewVelocity)
+void CAtom::setNewVelocity(const vec3 &newVelocity_)
 {
-    newvelocity = newNewVelocity;
+//    if (matrixAtom)
+//    {
+//        cout << "! setNewVelocity() for matrixAtom !" << endl;
+//        cout << newVelocity_.t();
+//    }
+//    if (!matrixAtom)
+        newvelocity = newVelocity_;
 }
 
-void CAtom::setNewForce(const vec3 &newNewForce)
+void CAtom::setNewForce(const vec3 &newForce_)
 {
-    newforce = newNewForce;
+    newforce = newForce_;
 }
 
 /* Unused*/
@@ -144,19 +173,19 @@ void CAtom::setNewForce(const vec3 &newNewForce)
 //    newPotEn = newNewPotEn;
 //}
 
-void CAtom::setData(const vec3 &newPosition, const vec3 &newVelocity, const vec3 &newForce)
-{
-    position = newPosition;
-    velocity = newVelocity;
-    force    = newForce;
-}
+//void CAtom::setData(const vec3 &newPosition, const vec3 &newVelocity, const vec3 &newForce)
+//{
+//    position = newPosition;
+//    velocity = newVelocity;
+//    force    = newForce;
+//}
 
-void CAtom::setNewData(const vec3 &newNewPosition, const vec3 &newNewVelocity, const vec3 &newNewForce)
-{
-    newposition = newNewPosition;
-    newvelocity = newNewVelocity;
-    newforce    = newNewForce;
-}
+//void CAtom::setNewData(const vec3 &newNewPosition, const vec3 &newNewVelocity, const vec3 &newNewForce)
+//{
+//    newposition = newNewPosition;
+//    newvelocity = newNewVelocity;
+//    newforce    = newNewForce;
+//}
 
 //void CAtom::setMatrixAtom()
 //{
@@ -165,23 +194,24 @@ void CAtom::setNewData(const vec3 &newNewPosition, const vec3 &newNewVelocity, c
 //    newvelocity.zeros();
 //}
 
-void CAtom::setAtomType(const string &atomType_)
+int CAtom::setAtomType(const string &atomType_)
 {
     if (atomType_ == "Ar")
     {
         atomType = atomType_;
         matrixAtom = 0;
+
+        return 0;
     }
     else if (atomType_ == "Ar_m")
     {
-        ////
-        // cout << "made matrix type" << endl;
-        ////
-
         atomType = atomType_;
         matrixAtom = 1;
         velocity.zeros();
         newvelocity.zeros();
+        newposition = position;
+
+        return 1;
     }
     else // default
     {
@@ -207,25 +237,45 @@ void CAtom::addToBoundaryCrossings(const ivec3 addBoundaryCrossings)
 //    newPressure += addPressure;
 //}
 
+void CAtom::checkForceCutoff()
+{
+    if (!matrixAtom)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (newforce(i) > forcemax)
+            {
+                cout << "! force cutoff MAX ! for " << atomType;
+                cout << newforce(i) << " " << endl;
+                newforce(i) = forcemax;
+            }
+            else
+            if (newforce(i) < -forcemax)
+            {
+                cout << "! force cutoff MIN ! for " << atomType;
+                cout << newforce(i) << " " << endl;
+                newforce(i) = -forcemax;
+            }
+        }
+    }
+}
+
 void CAtom::forward()
 {
-    //cout << "CAtom::forward()" << endl;
-//    oldposition = position;
-//    oldvelocity = velocity;
-//    oldforce    = force;
     if (!matrixAtom)
     {
         position    = newposition;
         velocity    = newvelocity;
-        force       = newforce;
-        potEn       = newPotEn;
-        pressure    = newPressure;
-        newposition = zeros<vec>(3,1);
-        newvelocity = zeros<vec>(3,1);
-        newforce    = zeros<vec>(3,1);
-        newPotEn    = 0.0;
-        newPressure = 0.0;
+        newposition.zeros();// = zeros<vec>(3,1);
+        newvelocity.zeros();// = zeros<vec>(3,1);
     }
+    force = newforce;
+    newforce.zeros();//    = zeros<vec>(3,1);
+
+    potEn       = newPotEn;
+    pressure    = newPressure;
+    newPotEn    = 0.0;
+    newPressure = 0.0;
 }
 
 void CAtom::resetStatistics()

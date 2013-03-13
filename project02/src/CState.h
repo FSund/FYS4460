@@ -26,30 +26,36 @@ public:
     CState(string element, string structure, ivec3 N, vec3 L, double interactionLength);
 //    CState(const CState &state, const ivec3 &N, const vec3 &L, const double &interactionLength);
     CState(const string filename, ivec3 &N, vec3 &L, double &interactionLength);
+    ~CState();
 
     void makeAtoms(ivec3 N, vec3 L, mat r, double sites_per_cell);
     void makeBoxes(const vec3 size, const double interactionLength);
     void fillBoxes();
     void randnVelocity(double mean, double sigma, long *seed);
     void randuVelocity(double mean, double vmax, long *seed);
+
     void generate_spherical_pores(long* seed, int N_pores, double min_pore_radius, double max_pore_radius);
-
+    void generate_cylindrical_pore(const double radius);
+    void FILIP_pores();
     void remove_half_the_atoms();
+    void decrease_density_by_factor(double &factor);
 
-    void save(string filename, bool saveSpeed, bool saveForces, bool indexing, bool markMatrixAtoms);
+    void save(string filename, bool saveSpeed=0, bool saveForces=0, bool indexing=0, bool markMatrixAtoms=0);
     void saveMatrix(string filename);
     void saveVelocity(string filename, bool MDUnits);
-    void load(string filename);
 
     void move(const double dt, const bool statistics);
     void newForces();
     void newForcesAndStatistics();
+    void gravity();
     void berendsen(const double Tbath, const double T, const double tt);
     void andersen(const double Tbath, const double tt, long *seed);
 
     void average();
 
     int getnAtoms() const;
+    int getnMovingAtoms() const;
+    int getnMatrixAtoms() const;
     int getnBoxes() const;
     vec3 getSize() const;
     const CAtom &getAtom(int i) const;
@@ -61,13 +67,16 @@ public:
 
     friend class MainApplication;
 protected:
+    int load(string filename);
     vector<CAtom*> atoms;
 //    vector<string> elements;
     vector<CBox*> boxes;
     imat boxIndexes;
     //string element;
-    string structure;
+//    string structure;
     int nAtoms;
+    int nMovingAtoms;
+    int nMatrixAtoms;
     int nBoxes;
     int atoms_per_cell;
     int nSites;
