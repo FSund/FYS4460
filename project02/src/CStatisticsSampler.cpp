@@ -273,7 +273,7 @@ void CStatisticsSampler::cylinder_flow(bool &save)
 
 
     vxAverage = zeros<vec>(nFlowBins);
-    ivec count = zeros<ivec>(nFlowBins);
+//    ivec count = zeros<ivec>(nFlowBins);
     vec3 position;
     double dr;
     int binNr;
@@ -285,13 +285,13 @@ void CStatisticsSampler::cylinder_flow(bool &save)
         if (dr < rMaxFlow)
         {
             vxAverage(binNr) += movingAtoms[i]->getVelocity()(0);
-            count(binNr)++;
+//            count(binNr)++;
         }
     }
-    for (int i = 0; i < nFlowBins; i++)
-    {
-        vxAverage(i) /= ((count(i) == 0) ? 1 : count(i));
-    }
+//    for (int i = 0; i < nFlowBins; i++)
+//    {
+//        vxAverage(i) /= ((count(i) == 0) ? 1 : count(i));
+//    }
 
     if (outputFolderExists && save)
     {
