@@ -45,7 +45,9 @@ public:
     int length() const;
 
     vec3 forceFromBox(const vec3 &r0) const;
-    void forceFromBox(const vec3 r0, vec3 &force, double &potSum, double &pressureSum) const;
+    vec3 forceFromBox(const vec3 &r0, const bool &matrixAtom) const;
+    void forceFromBox(const vec3 &r0, vec3 &force, double &potSum, double &pressureSum) const;
+//    void forceFromBox(const vec3 &r0, vec3 &force, double &potSum, double &pressureSum, const bool &matrixAtom) const;
 protected:
     int nBoxes;
     int nNeighbours;

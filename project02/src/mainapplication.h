@@ -17,14 +17,12 @@ class MainApplication
 public:
     MainApplication();
     void runApplication(int argc, char *argv[]);
-    void porous_system_d();
-    void porous_system();
-    void porous_system2();
+    void thermalized_system();
     void porous_system3();
+    void test();
 private:
     CState initialize(double T_, double L_, int N_, long *seed);
 
-    void test();
     double U(vec3 r0, vec3 r1);
 };
 

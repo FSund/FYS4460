@@ -194,14 +194,12 @@ void CAtom::setNewForce(const vec3 &newForce_)
 //    newvelocity.zeros();
 //}
 
-int CAtom::setAtomType(const string &atomType_)
+void CAtom::setAtomType(const string &atomType_)
 {
     if (atomType_ == "Ar")
     {
         atomType = atomType_;
         matrixAtom = 0;
-
-        return 0;
     }
     else if (atomType_ == "Ar_m")
     {
@@ -210,8 +208,6 @@ int CAtom::setAtomType(const string &atomType_)
         velocity.zeros();
         newvelocity.zeros();
         newposition = position;
-
-        return 1;
     }
     else // default
     {

@@ -8,9 +8,32 @@ CStatisticsSampler::CStatisticsSampler(const CState &state_):
     nBoxes(state->getnBoxes()),
     systemDim(state->getSize()),
     volume(prod(systemDim)),
-    rho(nAtoms/volume)
+    rho(nAtoms/volume),
+    tCurr(0),
+    tPrev(0),
+    nFlowBins(20),
+    rMaxFlow((30.0/L0)*(30.0/L0)),
+    drFlow(rMaxFlow/nFlowBins)
 {
     initPos = mat(3, nAtoms);
+    vxAverage = zeros<vec>(nFlowBins);
+//    currPosMoving = mat(3, nMovingAtoms);
+//    prevPosMoving = mat(3, nMovingAtoms);
+    int ii = 0;
+    for (int i = 0; i < nAtoms; i++)
+    {
+        initPos.col(i) = state->getAtom(i).getPosition();
+        if (!state->getAtom(i).matrixAtom)
+        {
+//            currPosMoving.col(ii) = initPos.col(i);
+            movingAtoms.push_back(state->getAtomPtr(i));
+            ii++;
+        }
+    }
+
+//    rBins = vec(nFlowBins);
+//    for (int i = 0; i < nFlowBins; i++)
+//        rBins(i) = (i+1)*drFlow;
 
     if (!fopen("./output/test.dat","w"))
     {
@@ -31,6 +54,14 @@ CStatisticsSampler::CStatisticsSampler(const CState &state_):
         // velocityFile = fopen("./output/velocity.dat","w");
         diffusionFile = fopen("./output/diffusion.dat","w");
         pairCorrelationFile = fopen("./output/pairCorrelation.dat", "w");
+        flowFile = fopen("./output/flowProfile.dat", "w");
+
+        // the first line of the flow file
+        for (int i = 0; i < nFlowBins; i++)
+        {
+            fprintf(flowFile, "%f ", (i+1)*drFlow);
+        }
+        fprintf(flowFile, "\n");
     }
 }
 
@@ -40,12 +71,17 @@ void CStatisticsSampler::sample(
         const double t,
         bool save)
 {
+//    tPrev = tCurr;
+//    tCurr = t;
+
     state = &state_;
     K = kineticEnergy(MDunits);
     U = potentialEnergy(MDunits);
     T = temperature(MDunits);
     P = pressure(MDunits);
     rsquared = diffusion(MDunits);
+
+    cylinder_flow(save);
 
     if (outputFolderExists && save)
     {
@@ -89,7 +125,7 @@ double CStatisticsSampler::potentialEnergy(bool MDunits)
 
 double CStatisticsSampler::temperature(bool MDunits)
 {
-    T = 2.0*K/(3.0*nAtoms); // MD units
+//    T = 2.0*K/(3.0*nAtoms); // MD units
     T = 2.0*K/(3.0*nMovingAtoms);
 
     if (MDunits) return T; // MD units
@@ -114,16 +150,12 @@ double CStatisticsSampler::diffusion(bool MDunits)
 {
     vec3 dr;
     rsquared = 0.0;
-    for (int i = 0; i < nAtoms; i++)
+    for (int i = 0; i < nMovingAtoms; i++)
     {
-        if (!state->getAtom(i).matrixAtom)
-        {
-            dr = state->getAtom(i).getPosition() - initPos.col(i);
-            dr += state->getAtom(i).getBoundaryCrossings()%systemDim;;
-            rsquared += dr(0)*dr(0) + dr(1)*dr(1) + dr(2)*dr(2);
-        }
+        dr = movingAtoms[i]->getPosition() - initPos.col(i);
+        dr += movingAtoms[i]->getBoundaryCrossings()%systemDim;;
+        rsquared += dr(0)*dr(0) + dr(1)*dr(1) + dr(2)*dr(2);
     }
-//    rsquared /= nAtoms;
     rsquared /= nMovingAtoms;
 
     if (MDunits) return rsquared;
@@ -227,6 +259,46 @@ mat CStatisticsSampler::pairCorrelation_manual(string filename, bool MDunits, in
     }
 
     return g;
+}
+
+void CStatisticsSampler::cylinder_flow(bool &save)
+{
+//    prevPosMoving = currPosMoving;
+//    tPrev = tCurr;
+//    tCurr = t;
+//    for (int i = 0; i < nMovingAtoms; i++)
+//    {
+//        currPosMoving.col(i) = movingAtoms[i]->getPosition();
+//    }
+
+
+    vxAverage = zeros<vec>(nFlowBins);
+    ivec count = zeros<ivec>(nFlowBins);
+    vec3 position;
+    double dr;
+    int binNr;
+    for (int i = 0; i < nMovingAtoms; i++)
+    {
+        position = movingAtoms[i]->getPosition() - systemDim/2.0;
+        dr = position(1)*position(1) + position(2)*position(2);
+        binNr = int(dr/drFlow);
+        if (dr < rMaxFlow)
+        {
+            vxAverage(binNr) += movingAtoms[i]->getVelocity()(0);
+            count(binNr)++;
+        }
+    }
+    for (int i = 0; i < nFlowBins; i++)
+    {
+        vxAverage(i) /= ((count(i) == 0) ? 1 : count(i));
+    }
+
+    if (outputFolderExists && save)
+    {
+        for (int i = 0; i < nFlowBins; i++)
+            fprintf(flowFile, "%f ", vxAverage(i));
+        fprintf(flowFile, "\n");
+    }
 }
 
 void CStatisticsSampler::print(bool MDunits)

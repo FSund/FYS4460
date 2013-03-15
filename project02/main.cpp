@@ -7,9 +7,8 @@ int main(int argc, char* argv[])
 {
     MainApplication m;
 //    m.runApplication(argc, argv);
-//    m.porous_system(argc, argv);
-//    m.porous_system2();
     m.porous_system3();
+//    m.thermalized_system();
 
     return 0;
 }

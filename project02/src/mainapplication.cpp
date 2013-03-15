@@ -85,158 +85,19 @@ void MainApplication::runApplication(int argc, char *argv[])
     //    sampler.pairCorrelation_manual("./output/pairCorrelation_final.dat", 1, 200);
 }
 
-void MainApplication::porous_system_d()
+void MainApplication::thermalized_system()
 {
-//    cout << "MainApplication::porous_system" << endl;
+    cout << "MainApplication::porous_system" << endl;
 
-////    double T_, Tbath, tau;
-////    int thermostat, saveStates;
-//    double L_, dt;
-//    int N_, nSteps, calculateStatistics;
-
-//    dt = 0.005;
-//    nSteps = 200;
-////    thermostat = 1;
-////    Tbath = 0.851;
-////    tau = 15;
-//    calculateStatistics = 1;
-////    saveStates = 0;
-////    long seed = -1;
-
-//    L_ = 5.720/L0;
-//    N_ = 20;
-
-//    ////
-//    // cout << L_*N_ << endl;
-//    ////
-
-//    vec3 L;
-//    ivec3 N;
-//    L << L_ << L_ << L_;
-//    N << N_ << N_ << N_;
-
-//    double interactionlength = 3.0;
-
-//    CState state;
-//    state.load("N20_at_T0.845.xyz");
-
-////    CStatisticsSampler sampler(state);
-////    sampler.initialize_pairCorrelation(200, 1);
-//    ostringstream filename;
-
-//    double r = 20.0/L0; // Angstrom, radius of sphere in center
-//    cout << "r = " << r << endl;
-
-//    vec3 center = (N%L)/2.0;
-//    vec3 rvec;
-//    double dr;
-
-//    ////
-//    cout << center << endl;
-//    ////
-
-////    for (int i = 0; i < state.getnAtoms(); i++)
-////    {
-////        rvec = state.getAtom(i).getPosition() - center;
-////        // cout << rvec.t();
-////        dr = norm(rvec, 2);
-////        if (dr >= r)
-////        {
-////            // cout << "i = " << i << ", size = " << state.atoms.size() << endl;
-////            state.atoms[i]->setMatrixAtom();
-////        }
-////    }
-
-//    state = CState(state, N, L, interactionlength);
-
-//    for (int i = 0; i < nSteps; i++)
-//    {
-//        filename.str(string());
-//        filename << "./output/states/state." << setfill('0') << setw(4) << i << ".xyz";
-
-//        state.save(filename.str(), 1, 1, 1, 1);
-//        state.move(dt, calculateStatistics);
-//    }
-}
-
-void MainApplication::porous_system()
-{
-//    cout << "MainApplication::porous_system" << endl;
-
-////    double dt, T_, Tbath, tau, L_;
-////    int nSteps, thermostat, N_, calculateStatistics, saveStates;
-
-//    double dt = 0.005;
-//    int nSteps = 1000;
-////    int thermostat = 1;
-//    double Tbath = 1.05;
-////    double tau = 15;
-//    int calculateStatistics = 1;
-////    int saveStates = 0;
-//    long seed = -1;
-//    double tt = 1.0/10;
-
-////    double T_ = 1.0;
-//    double L_ = 5.720/L0;
-//    int N_ = 20;
-
-//    vec3 L;
-//    ivec3 N;
-//    L << L_ << L_ << L_;
-//    N << N_ << N_ << N_;
-
-//    double interactionlength = 3.0;
-
-//    CState state;
-//    state.load("N20_at_T0.845.xyz");
-//    state = CState(state, N, L, interactionlength);
-
-//    ostringstream filename;
-
-//    generate_pores(state, &seed);
-
-//    ////
-////    for (int i = 0; i < state.nAtoms; i++)
-////        cout << state.elements[i];
-//    ////
-
-//    CStatisticsSampler sampler(state);
-//    sampler.initialize_pairCorrelation(200, 1);
-
-//    for (int i = 0; i < nSteps; i++)
-//    {
-//        if (i%25==0) cout << "n = " << i << " of " << nSteps << endl;
-
-//        filename.str(string());
-//        filename << "./output/states/state." << setfill('0') << setw(4) << i << ".xyz";
-
-//        sampler.sample(state, 1, dt*i);
-//        if (i < 300) state.berendsen(Tbath, sampler.T, tt);
-
-//        state.save(filename.str(), 0, 0, 0, 0);
-//        state.move(dt, calculateStatistics);
-//    }
-}
-
-void MainApplication::porous_system2()
-{
-    cout << "MainApplication::porous_system2" << endl;
-
-//    double dt, T_, Tbath, tau, L_;
-//    int nSteps, thermostat, N_, calculateStatistics, saveStates;
-
-    double dt = 0.005;
-    int nSteps = 1000;
-//    int thermostat = 1;
-    double Tbath = 1.5;
-//    double tau = 15;
+    double T = 1.8;
+    double dt = 0.01;
+    int nSteps = 5000;
+    double Tbath = 0.851;
     int calculateStatistics = 1;
-//    int saveStates = 0;
     long seed = -1;
-    double tt = 1.0/10;
+    double tt = 1.0/15;
 
-//    double T_ = 1.0;
-    double L_ = 5.720/L0;
+    double L_ = 5.720;
     int N_ = 20;
 
     ostringstream filename;
@@ -247,41 +108,45 @@ void MainApplication::porous_system2()
     N << N_ << N_ << N_;
     double interactionlength = 3.0;
 
-    CState state("N20_at_T0.845.xyz", N, L, interactionlength);
-
-    state.generate_spherical_pores(&seed, 20, 20.0, 30.0);
-    state.remove_half_the_atoms();
-    state.saveMatrix("./output/states/matrix.xyz");
+    CState state = initialize(T, L_, N_, &seed);
 
     CStatisticsSampler sampler(state);
-//    sampler.initialize_pairCorrelation(200, 1);
+    sampler.initialize_pairCorrelation(200, 1);
+    sampler.sample(state, 1, 0, 1);
+    cout << "Initial temp = " << sampler.T << endl;
 
     for (int i = 0; i < nSteps; i++)
     {
         if (i%25==0) cout << "n = " << i << " of " << nSteps << endl;
 
         filename.str(string());
-        filename << "./output/states/state." << setfill('0') << setw(4) << i << ".xyz";
+        filename << "./output/states/state." << setfill('0') << setw(5) << i << ".xyz";
 
-        sampler.sample(state, 1, dt*i);
-        cout << "T = " << sampler.T << ", K = " << sampler.K << endl;
-        if (i < 300) state.berendsen(Tbath, sampler.T, tt);
+//        sampler.sample(state, 1, dt*i, 0);
+//        cout << "T (before thermostat) = " << sampler.T << endl;
+        if (i < 3000) state.berendsen(Tbath, sampler.T, tt);
+        sampler.sample(state, 1, dt*i, 1);
+        cout << "T (after thermostat)  = " << sampler.T << endl;
 
-        state.save(filename.str(), 0, 0, 0, 0);
+        if (i%100 == 0 || i == 0) state.save(filename.str(), 0, 0, 0, 0);
         state.move(dt, calculateStatistics);
     }
+    // save the final state
+    filename.str(string());
+    filename << "./output/states/state." << setfill('0') << setw(5) << nSteps << ".xyz";
+    state.save(filename.str(), 0, 0, 0, 0);
 }
 
 void MainApplication::porous_system3()
 {
     cout << "MainApplication::porous_system3" << endl;
 
-    double dt = 0.005;
-    int nSteps = 1000;
+    double dt = 0.02;
+    int nSteps = 5000;
     double Tbath = 1.5;
-    int calculateStatistics = 1;
+    bool calculateStatistics = 1;
     long seed = -1;
-    double tt = 1.0/10;
+    double tt = 1.0/15;
 
     double L_ = 5.720/L0;
     int N_ = 20;
@@ -294,10 +159,68 @@ void MainApplication::porous_system3()
     N << N_ << N_ << N_;
     double interactionlength = 3.0;
 
-    CState state("N20_at_T0.845.xyz", N, L, interactionlength);
+    CState state("state.05000.xyz", N, L, interactionlength); // OK
 
     state.generate_cylindrical_pore(20.0);
-//    state.generate_spherical_pores(&seed, 50, 20, 30);
+//    state.generate_spherical_pores(&seed, 20, 20.0, 30.0);
+//    state.FILIP_pores();
+    state.remove_half_the_atoms();
+    state.saveMatrix("./output/states/matrix.xyz");
+
+    CStatisticsSampler sampler(state);
+    sampler.initialize_pairCorrelation(200, 1);
+    sampler.sample(state, 1, 0, 1);
+    cout << "Initial temp = " << sampler.T << endl;
+
+    for (int i = 0; i < nSteps; i++)
+    {
+        if (i%25==0) cout << "n = " << i << " of " << nSteps << endl;
+
+        sampler.sample(state, 1, dt*i, 1);
+        cout << "T (before thermostat) = " << sampler.T << endl;
+//        if (i < 3000) state.berendsen(Tbath, sampler.T, tt);
+
+//        if (i%100 == 0 || i == 0)
+        {
+            filename.str(string());
+            filename << "./output/states/state." << setfill('0') << setw(5) << i << ".xyz";
+            state.save(filename.str(), 0, 0, 0, 0);
+        }
+
+        state.move(dt, calculateStatistics);
+    }
+    // save the final state
+    filename.str(string());
+    filename << "./output/states/state." << setfill('0') << setw(5) << nSteps << ".xyz";
+    state.save(filename.str(), 0, 0, 0, 0);
+}
+
+void MainApplication::test()
+{
+    cout << "MainApplication::porous_system3" << endl;
+
+    double dt = 0.01;
+    int nSteps = 1;
+    double Tbath = 1.5;
+    int calculateStatistics = 1;
+    long seed = -1;
+    double tt = 1.0/15;
+
+    double L_ = 5.720/L0;
+    int N_ = 20;
+
+    ostringstream filename;
+
+    vec3 L;
+    ivec3 N;
+    L << L_ << L_ << L_;
+    N << N_ << N_ << N_;
+    double interactionlength = 3.0;
+
+    CState state("state.05000.xyz", N, L, interactionlength);
+
+//    state.generate_cylindrical_pore(20.0);
+    state.generate_spherical_pores(&seed, 20, 20.0, 30.0);
 //    state.FILIP_pores();
     state.remove_half_the_atoms();
     state.saveMatrix("./output/states/matrix.xyz");
@@ -312,28 +235,22 @@ void MainApplication::porous_system3()
         if (i%25==0) cout << "n = " << i << " of " << nSteps << endl;
 
         filename.str(string());
-        filename << "./output/states/state." << setfill('0') << setw(4) << i << ".xyz";
+        filename << "./output/states/state." << setfill('0') << setw(5) << i << ".xyz";
 
-        sampler.sample(state, 1, dt*i, 1);
+        sampler.sample(state, 1, dt*i, 0);
         cout << "T (before thermostat) = " << sampler.T << endl;
-        if (i < 100) state.berendsen(Tbath, sampler.T, tt);
-//        sampler.sample(state, 1, dt*i, 0);
+        if (i < 3000) state.berendsen(Tbath, sampler.T, tt);
+
+//        sampler.sample(state, 1, dt*i, 1);
 //        cout << "T (after thermostat)  = " << sampler.T << endl;
 
-        state.save(filename.str(), 0, 0, 0, 0);
+        if (i%100 == 0 || i == 0) state.save(filename.str(), 0, 0, 0, 0);
         state.move(dt, calculateStatistics);
-
-//        vec3 vel;
-//        for (int i = 0; i < state.getnAtoms(); i++)
-//        {
-//            if (state.getAtom(i).matrixAtom)
-//            {
-//                vel = state.getAtom(i).getVelocity();
-//                if (norm(vel, 2) != 0)
-//                    cout << vel.t();
-//            }
-//        }
     }
+    // save the final state
+    filename.str(string());
+    filename << "./output/states/state." << setfill('0') << setw(5) << nSteps << ".xyz";
+    state.save(filename.str(), 0, 0, 0, 0);
 }
 
 CState MainApplication::initialize(double T_, double L_, int N_, long* seed)

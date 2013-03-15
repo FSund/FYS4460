@@ -242,7 +242,7 @@ void CBox::calculateForces(const vector<CBox*> &boxes)
             rvec(1) = newPosition(1) + displacementVectors(1,i);
             rvec(2) = newPosition(2) + displacementVectors(2,i);
 
-            forceComponent = neighbourBoxPtr->forceFromBox(rvec);
+            forceComponent = neighbourBoxPtr->forceFromBox(rvec, atomList->item->matrixAtom);
             force(0) += forceComponent(0);
             force(1) += forceComponent(1);
             force(2) += forceComponent(2);
@@ -273,6 +273,11 @@ void CBox::calculateForces(const vector<CBox*> &boxes)
         atomList2 = atomList->readNext();
         while (atomList2 != 0)
         {
+            if (atomList->item->matrixAtom && atomList2->item->matrixAtom)
+            {
+                atomList2 = atomList2->readNext();
+                continue;
+            }
             newPosition2 = atomList2->item->getNewPosition();
             drvec(0) = newPosition(0) - newPosition2(0);
             drvec(1) = newPosition(1) - newPosition2(1);
@@ -281,10 +286,6 @@ void CBox::calculateForces(const vector<CBox*> &boxes)
             dr2 = drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2);
             dr6 = dr2*dr2*dr2;
             LJ = 24.0*(2.0 - dr6)/(dr6*dr6*dr2);
-
-            //dr12_inv = 1.0/(dr6*dr6);
-            //LJ = 24*(2.0 - dr6)*dr12_inv/dr2;
-            //potEn = (1.0 - dr6)*dr12_inv;
 
             forceComponent(0) = LJ*drvec(0);
             forceComponent(1) = LJ*drvec(1);
@@ -295,7 +296,7 @@ void CBox::calculateForces(const vector<CBox*> &boxes)
             force(2) += forceComponent(2);
 
             ////
-            if (!isfinite(force(0))) cout << "! infinite force, atoms in box = " << force.t();
+//            if (!isfinite(force(0))) cout << "! infinite force, atoms in box = " << force.t();
             ////
 
             // using Newton's third law for the opposite force
@@ -329,11 +330,13 @@ void CBox::calculateForcesAndStatistics(const vector<CBox*> &boxes)
     const linkedList<CAtom*>* atomList;
     double potComp, potSum, pressureComp, pressureSum;
     atomList = &atomPtrList;
+    bool matrixAtom;
 
     // finding the forces from all neighbouring boxes
     while (atomList != 0)
     {
         newPosition = atomList->item->getNewPosition();
+//        matrixAtom = atomList->item->matrixAtom;
 
         force.zeros();
         potSum = 0.0;
@@ -419,7 +422,7 @@ void CBox::calculateForcesAndStatistics(const vector<CBox*> &boxes)
             pressureSum += pressureComp;
 
             ////
-            if (!isfinite(force(0))) cout << "! infinite force, atoms in box = " << force.t();
+//            if (!isfinite(force(0))) cout << "! infinite force, atoms in box = " << force.t();
             ////
 
             // using Newton's third law for the opposite force
@@ -476,7 +479,52 @@ vec3 CBox::forceFromBox(const vec3 &r0) const
 
         dr2 = drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2);
         dr6 = dr2*dr2*dr2;
-        LJ = 24.0*(2.0 - dr6)/(dr6*dr6*dr2); // faster than above
+        LJ = 24.0*(2.0 - dr6)/(dr6*dr6*dr2);
+
+        forceComponent(0) = LJ*drvec(0);
+        forceComponent(1) = LJ*drvec(1);
+        forceComponent(2) = LJ*drvec(2);
+
+        force(0) += forceComponent(0);
+        force(1) += forceComponent(1);
+        force(2) += forceComponent(2);
+
+        atomList->item->addToNewForce(-forceComponent);
+
+        atomList = atomList->readNext();
+    }
+
+    return force;
+}
+
+vec3 CBox::forceFromBox(const vec3 &r0, const bool &matrixAtom) const
+{
+    if (empty)
+    {
+        //cout << "! Atomlist/box number " << boxNumber << " empty, exiting forceFromBox and returning zerovec3 !" << endl;
+        return zeros<vec>(3,1);
+    }
+
+    const linkedList<CAtom*>* atomList;
+    atomList = &atomPtrList;
+    vec3 r, drvec, forceComponent, force;
+    double dr2, dr6, LJ;
+
+    force.zeros();
+    while (atomList != 0)
+    {
+        if (matrixAtom && atomList->item->matrixAtom)
+        {
+            atomList = atomList->readNext();
+            continue;
+        }
+
+        r = atomList->item->getNewPosition();
+        drvec = r0 - r;
+
+        dr2 = drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2);
+        dr6 = dr2*dr2*dr2;
+        LJ = 24.0*(2.0 - dr6)/(dr6*dr6*dr2);
 
         forceComponent(0) = LJ*drvec(0);
         forceComponent(1) = LJ*drvec(1);
@@ -495,7 +543,7 @@ vec3 CBox::forceFromBox(const vec3 &r0) const
 }
 
 void CBox::forceFromBox(
-        const vec3 r0,
+        const vec3 &r0,
         vec3 &force,
         double &potSum,
         double &pressureSum) const
@@ -531,8 +579,7 @@ void CBox::forceFromBox(
         forceComp(0) = LJ*drvec(0);
         forceComp(1) = LJ*drvec(1);
         forceComp(2) = LJ*drvec(2);
-        //potComp = (1.0 - dr6)*dr12_inv; // adding factor 4 later
-        potComp = dr12_inv - 1.0/dr6; // adding factor 4 later -- ~18% FASTER
+        potComp = dr12_inv - 1.0/dr6; // adding factor 4 later
         pressureComp = forceComp(0)*drvec(0) + forceComp(1)*drvec(1) + forceComp(2)*drvec(2);
 
         force(0) += forceComp(0);
@@ -547,6 +594,66 @@ void CBox::forceFromBox(
         atomList = atomList->readNext();
     }
 }
+
+//void CBox::forceFromBox(
+//        const vec3 &r0,
+//        vec3 &force,
+//        double &potSum,
+//        double &pressureSum,
+//        const bool &matrixAtom) const
+//{
+//    if (empty)
+//    {
+//        //cout << "! Atomlist/box number " << boxNumber << " empty, exiting forceFromBox and returning zerovec3 !" << endl;
+//        force.zeros();
+//        potSum = 0.0;
+//        pressureSum = 0.0;
+//        return;
+//    }
+
+//    const linkedList<CAtom*>* atomList;
+//    atomList = &atomPtrList;
+//    vec3 r, drvec, forceComp;
+//    double dr2, dr6, dr12_inv, LJ, potComp, pressureComp;
+
+//    force.zeros();
+//    potSum = 0.0;
+//    pressureSum = 0.0;
+//    while (atomList != 0)
+//    {
+//        if (matrixAtom && atomList->item->matrixAtom)
+//        {
+//            atomList = atomList->readNext();
+//            continue;
+//        }
+
+//        r = atomList->item->getNewPosition();
+
+//        drvec = r0 - r;
+//        dr2 = drvec(0)*drvec(0) + drvec(1)*drvec(1) + drvec(2)*drvec(2);
+
+//        dr6 = dr2*dr2*dr2;
+//        dr12_inv = 1.0/(dr6*dr6);
+//        LJ = 24.0*(2.0 - dr6)*dr12_inv/dr2;
+
+//        forceComp(0) = LJ*drvec(0);
+//        forceComp(1) = LJ*drvec(1);
+//        forceComp(2) = LJ*drvec(2);
+//        potComp = dr12_inv - 1.0/dr6; // adding factor 4 later
+//        pressureComp = forceComp(0)*drvec(0) + forceComp(1)*drvec(1) + forceComp(2)*drvec(2);
+
+//        force(0) += forceComp(0);
+//        force(1) += forceComp(1);
+//        force(2) += forceComp(2);
+//        potSum += potComp;
+//        pressureSum += pressureComp;
+
+//        atomList->item->addToNewForce(-forceComp);
+//        atomList->item->addToNewStatistics(potComp, pressureComp);
+
+//        atomList = atomList->readNext();
+//    }
+//}
 
 linkedList<CAtom*> CBox::readAtomList() const
 {

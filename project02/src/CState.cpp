@@ -4,7 +4,7 @@ CState::CState()
 {
 } // default constructor
 
-CState::CState(string element, string structure, ivec3 N, vec3 L, double interactionLength):
+CState::CState(string atomType, string structure, ivec3 N, vec3 L, double interactionLength):
 //    structure(structure),
     nMovingAtoms(0),
     nMatrixAtoms(0),
@@ -21,7 +21,6 @@ CState::CState(string element, string structure, ivec3 N, vec3 L, double interac
 
         nSites = prod(N)*sites_per_cell;
         nAtoms = nSites*atoms_per_site;
-        nMovingAtoms = nAtoms;
         size = N%L;
 
 //        for (int i = 0; i < nAtoms; i++)
@@ -37,7 +36,7 @@ CState::CState(string element, string structure, ivec3 N, vec3 L, double interac
         r.col(1) *= L(1);
         r.col(2) *= L(2);
 
-        makeAtoms(N, L, r, sites_per_cell);
+        makeAtoms(N, L, r, sites_per_cell, atomType);
         makeBoxes(size, interactionLength);
         fillBoxes();
 
@@ -72,6 +71,9 @@ CState::CState(const string filename, ivec3 &N, vec3 &L, double &interactionLeng
         exit(1);
     makeBoxes(size, interactionLength);
     fillBoxes();
+
+//    cout << "atoms.size() = " << atoms.size() << endl;
+//    cout << "nAtoms = " << nAtoms << endl;
 }
 
 CState::~CState()
@@ -80,8 +82,10 @@ CState::~CState()
         delete atoms[i];
 }
 
-void CState::makeAtoms(ivec3 N, vec3 L, mat r, double sites_per_cell)
+void CState::makeAtoms(ivec3 N, vec3 L, mat r, double sites_per_cell, string atomType)
 {
+    cout << "CState::makeAtoms" << endl;
+
     vec3 cellPos;
 
     atoms = vector<CAtom*>();
@@ -97,11 +101,24 @@ void CState::makeAtoms(ivec3 N, vec3 L, mat r, double sites_per_cell)
                     CAtom* atom = new CAtom;
                     cellPos << L(0)*ix << L(1)*iy << L(2)*iz;
                     atom->setPosition(cellPos + r.row(i).t());
-                    atoms.push_back(atom);
+                    atom->setAtomType(atomType);
+                    if (atom->matrixAtom)
+                    {
+                        nMatrixAtoms++;
+                        atoms.push_back(atom);
+                    }
+                    else
+                    {
+                        nMovingAtoms++;
+                        movingAtoms.push_back(atom);
+                        atoms.push_back(atom);
+                    }
                 }
             }
         }
     }
+
+    cout << "Exiting CState::makeAtoms" << endl;
 }
 
 void CState::makeBoxes(const vec3 systemSize, const double interactionLength)
@@ -259,22 +276,26 @@ void CState::generate_spherical_pores(long *seed, int N_pores, double min_pore_r
     }
 
     vec3 rvec;
+    rowvec3 position;
+    rowvec3 pore_center;
     double dr;
     string atomType;
     for (int poreNr = 0; poreNr < N_pores; poreNr++)
     {
-        for (int i = 0; i < nAtoms; i++)
+        pore_center = pore_centers.row(poreNr);
+        for (int i = 0; i < nMovingAtoms; i++)
         {
+            position = movingAtoms[i]->getPosition().t();
             for (int j = 0; j < 27; j++)
             {
-                rvec = atoms[i]->getPosition().t() - pore_centers.row(poreNr)
-                        + displacementMat.row(j);
+                rvec = position - pore_center + displacementMat.row(j);
                 dr = norm(rvec, 2);
-                if (dr <= pore_radi(poreNr) && !atoms[i]->matrixAtom)
+                if (dr <= pore_radi(poreNr))
                 {
-                    atomType = atoms[i]->getAtomType();
+                    atomType = movingAtoms[i]->getAtomType();
                     atomType.append("_m");
-                    atoms[i]->setAtomType(atomType);
+                    movingAtoms[i]->setAtomType(atomType);
+                    movingAtoms.erase(movingAtoms.begin() + i);
                     nMatrixAtoms++;
                     nMovingAtoms--;
                 }
@@ -285,37 +306,45 @@ void CState::generate_spherical_pores(long *seed, int N_pores, double min_pore_r
 
 void CState::generate_cylindrical_pore(const double radius)
 {
-//    double pore_radius = min_pore_radius/L0; // converting from Angstrom to MD units
-//    double pore_radius_dr = (max_pore_radius - min_pore_radius)/L0;
+    ////
+//    cout << "atoms.size() = " << atoms.size() << endl;
+//    cout << "nAtoms = " << nAtoms << endl;
+//    cout << atoms[0]->getPosition().t();
+//    cout << atoms[31999]->getPosition().t();
+    ////
 
     int N_pores = 1;
-//    mat pore_centers(N_pores, 3);
-
-//    vec3 pore_radi;
-//    pore_radi = size/12;
     double pore_dr = radius/L0;
-    vec3 pore_thing;
-    pore_thing << 0 << size(1)/2.0 << size(2)/2.0;
+    vec3 pore_center;
+    pore_center << 0 << size(1)/2.0 << size(2)/2.0;
 
     vec3 rvec;
     string atomType;
     double dr;
     for (int poreNr = 0; poreNr < N_pores; poreNr++)
     {
-        for (int i = 0; i < nAtoms; i++)
+        for (int i = (nMovingAtoms-1); i >= 0; i--)
         {
-            rvec = atoms[i]->getPosition() - pore_thing;
+            rvec = movingAtoms[i]->getPosition() - pore_center;
             dr = norm(rvec.rows(1,2),2);
-            if (dr > pore_dr && !atoms[i]->matrixAtom)
+            if (dr > pore_dr)
             {
-                atomType = atoms[i]->getAtomType();
+                atomType = movingAtoms[i]->getAtomType();
                 atomType.append("_m");
-                atoms[i]->setAtomType(atomType);
+                movingAtoms[i]->setAtomType(atomType);
+                movingAtoms.erase(movingAtoms.begin() + i);
                 nMatrixAtoms++;
                 nMovingAtoms--;
             }
         }
     }
+
+    ////
+//    cout << "nMatrixAtoms = " << nMatrixAtoms << endl;
+//    cout << "nMovingAtoms = " << nMovingAtoms << endl;
+//    cout << "movingAtoms.size() = " << movingAtoms.size() << endl;
+//    cout << "atoms.size() = " << atoms.size() << endl;
+    ////
 }
 
 void CState::FILIP_pores()
@@ -348,61 +377,75 @@ void CState::FILIP_pores()
 void CState::remove_half_the_atoms()
 {
     cout << "CState::remove_half_the_atoms" << endl;
+    cout << "Old nAtoms = " << nAtoms << endl;
+    cout << "Old nMovingAtoms = " << nMovingAtoms << endl;
 
-    vector<CAtom*> newAtoms;
     long idum = -1;
-    for (int i = 0; i < nAtoms; i++)
+    for (int i = (nAtoms-1); i >= 0; i--)
     {
         if (!atoms[i]->matrixAtom && ran2(&idum) < 0.5)
-            newAtoms.push_back(atoms[i]);
-        else if (atoms[i]->matrixAtom)
-            newAtoms.push_back(atoms[i]);
-        else
+        {
             delete atoms[i];
+            atoms.erase(atoms.begin() + i);
+        }
     }
-
-    atoms = newAtoms;
     nAtoms = atoms.size();
-    nMovingAtoms = nAtoms - nMatrixAtoms;
+
+    movingAtoms.clear();
+    nMovingAtoms = 0;
+    for (int i = 0; i < nAtoms; i++)
+    {
+        if (!atoms[i]->matrixAtom)
+        {
+            movingAtoms.push_back(atoms[i]);
+            nMovingAtoms++;
+        }
+    }
+    if (movingAtoms.size() != nMovingAtoms)  cout << "! Wrong number of moving atoms after removing half!" << endl;
+
     for (int i = 0; i < nBoxes; i++)
     {
         boxes[i]->flush();
     }
     fillBoxes();
 
+    ////
     cout << "New nAtoms = " << nAtoms << endl;
+    cout << "New nMovingAtoms = " << nMovingAtoms << endl;
+    ////
+
     cout << "Exiting CState::remove_half_the_atoms" << endl << endl;
 }
 
-void CState::decrease_density_by_factor(double &factor)
-{
-    if (factor > 1.0 || factor < 0.0)
-    {
-        cout << "! Invalid factor to decrease density by. I won't do it !" << endl;
-        return;
-    }
+//void CState::decrease_density_by_factor(double &factor)
+//{
+//    if (factor > 1.0 || factor < 0.0)
+//    {
+//        cout << "! Invalid factor to decrease density by. I won't do it !" << endl;
+//        return;
+//    }
 
-    vector<CAtom*> newAtoms;
-    long idum = -1;
-    for (int i = 0; i < nAtoms; i++)
-    {
-        if (!atoms[i]->matrixAtom && ran2(&idum) < factor)
-            newAtoms.push_back(atoms[i]); // keeping some "fluid" atoms
-        else if (atoms[i]->matrixAtom)
-            newAtoms.push_back(atoms[i]); // keping all matrix atoms
-        else
-            delete atoms[i]; // deleting all other atoms
-    }
+//    vector<CAtom*> newAtoms;
+//    long idum = -1;
+//    for (int i = 0; i < nAtoms; i++)
+//    {
+//        if (!atoms[i]->matrixAtom && ran2(&idum) < factor)
+//            newAtoms.push_back(atoms[i]); // keeping some "fluid" atoms
+//        else if (atoms[i]->matrixAtom)
+//            newAtoms.push_back(atoms[i]); // keping all matrix atoms
+//        else
+//            delete atoms[i]; // deleting all other atoms
+//    }
 
-    atoms = newAtoms;
-    nAtoms = atoms.size();
-    nMovingAtoms = nAtoms - nMatrixAtoms;
-    for (int i = 0; i < nBoxes; i++)
-    {
-        boxes[i]->flush();
-    }
-    fillBoxes();
-}
+//    atoms = newAtoms;
+//    nAtoms = atoms.size();
+//    nMovingAtoms = nAtoms - nMatrixAtoms;
+//    for (int i = 0; i < nBoxes; i++)
+//    {
+//        boxes[i]->flush();
+//    }
+//    fillBoxes();
+//}
 
 void CState::save(string filename, bool saveSpeed, bool saveForces, bool indexing, bool markMatrixAtoms)
 {
@@ -567,13 +610,14 @@ int CState::load(string filename)
             ofile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             ofile.getline(Comment, 256);
         }
-        nMovingAtoms = nAtoms;
+//        nMovingAtoms = nAtoms;
         cout << "nAtoms = " << nAtoms << endl;
         cout << "Comment: " << Comment << endl;
 
         atoms.reserve(nAtoms);
 
-        while (ofile.good() && !ofile.eof())
+//        while (ofile.good() && !ofile.eof())
+        while (ofile.good() && ofile.peek() != EOF)
         {
             ofile >> atomType;
             for (int dim = 0; dim < 3; dim++)
@@ -588,12 +632,27 @@ int CState::load(string filename)
 
             // creating the atom (pointer) and push to vector
             CAtom* atom = new CAtom(position, velocity);
-            nMatrixAtoms += atom->setAtomType(atomType);
-            atoms.push_back(atom);
+            atom->setAtomType(atomType);
+            if (atom->matrixAtom)
+            {
+                nMatrixAtoms++;
+                atoms.push_back(atom);
+            }
+            else
+            {
+                nMovingAtoms++;
+                movingAtoms.push_back(atom);
+                atoms.push_back(atom);
+            }
         }
-        cout << "Exiting CState::load, returning 0" << endl << endl;
-        nMovingAtoms = nAtoms - nMatrixAtoms;
 
+        ////
+//        cout << "movingAtoms.size() = " << movingAtoms.size() << endl;
+//        cout << "nMovingAtoms = " << nMovingAtoms << endl;
+//        cout << "nMatrixAtoms = " << nMatrixAtoms << endl;
+        ////
+
+        cout << "Exiting CState::load, returning 0" << endl << endl;
         return 0;
     }
     else
@@ -610,22 +669,15 @@ void CState::move(const double dt, const bool statistics)
     vec3 position, velocity, force;
     vec3 newposition, newvelocity;
     vec3 vdt2;
-//    mat vHalf(3, nAtoms);
-    mat vHalf = zeros<mat>(3, nAtoms);
+    mat vHalf = zeros<mat>(3, nMovingAtoms);
     ivec3 iBoundaryCrossings;
     vec3 fBoundaryCrossings;
 
-    // first we find the new positions for all the atoms, and v(t + dt/2)
-    for (int i = 0; i < nAtoms; i++)
+    // first we find the new positions for all the moving atoms, and v(t + dt/2)
+    for (int i = 0; i < nMovingAtoms; i++)
     {
-        if (atoms[i]->matrixAtom)
-        {
-            // vHalf.col(i) = zeros<mat>(3, 1); (done in initialization)
-            continue;
-        }
-
         // get data from the atom
-        atoms[i]->getData(position, velocity, force);
+        movingAtoms[i]->getData(position, velocity, force);
         // first half of Verlet algorithm
         vdt2 = velocity + (force/2.0)*dt; // find v(t + dt/2)
         vHalf.col(i) = vdt2;                // store this for later
@@ -644,11 +696,11 @@ void CState::move(const double dt, const bool statistics)
         {
             //newposition -= iBoundaryCrossings%size;
             newposition -= fBoundaryCrossings%size; // see comment above
-            atoms[i]->addToBoundaryCrossings(iBoundaryCrossings);
+            movingAtoms[i]->addToBoundaryCrossings(iBoundaryCrossings);
         }
 
         // sending the new position to the atom
-        atoms[i]->setNewPosition(newposition);
+        movingAtoms[i]->setNewPosition(newposition);
     }
 
     // looping through all boxes, checking which (if any) atoms have moved
@@ -696,18 +748,22 @@ void CState::move(const double dt, const bool statistics)
     if (statistics) newForcesAndStatistics();
     else newForces();
 
-    // flow thing
+    // flow thing, on just the moving atoms
     gravity();
 
-    // then we find the new velocities for all the atoms, and move them forwards in time
+    // then we find the new velocities for all the moving atoms
+    for (int i = 0; i < nMovingAtoms; i++)
+    {
+        newvelocity = vHalf.col(i) + (movingAtoms[i]->getNewForce()/2.0)*dt;
+        movingAtoms[i]->setNewVelocity(newvelocity);
+    }
+    // moving all atoms forward in time. This also resets force, pressure and
+    // potential energy counters
     for (int i = 0; i < nAtoms; i++)
     {
         // checking that none of the (new) forces are larger than a set cutoff
         // this is to avoid infinite velocities etc...
 //        atoms[i]->checkForceCutoff();
-
-        newvelocity = vHalf.col(i) + (atoms[i]->getNewForce()/2.0)*dt;
-        atoms[i]->setNewVelocity(newvelocity);
 
         // actually moving the atom forward one timestep, and zeroing out the "new" stuff
         atoms[i]->forward();
@@ -756,15 +812,12 @@ void CState::newForcesAndStatistics()
 
 void CState::gravity()
 {
-//    const double Fx = 0.1*E0/L0;
-//    vec3 forcevec;
-//    forcevec << Fx << 0.0 << 0.0;
-
+    const double Fx = 0.1*E0/L0;
     vec3 forcevec;
-    forcevec << 0.1*E0/L0 << 0.0 << 0.0;
+    forcevec << Fx << 0.0 << 0.0;
 
-    for (int i = 0; i < nAtoms; i++)
-        atoms[i]->addToNewForce(forcevec);
+    for (int i = 0; i < nMovingAtoms; i++)
+        movingAtoms[i]->addToNewForce(forcevec);
 }
 
 void CState::berendsen(const double Tbath, const double T, const double tt)

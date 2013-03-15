@@ -27,6 +27,9 @@ public:
     imat pairCorrelation();
     mat pairCorrelation_manual(string filename, bool MDunits, int nBins_);
 
+    void cylinder_flow(bool &save);
+    void reset_flow();
+
     void print(bool MDunits);
 
     FILE *velocityFile;
@@ -35,6 +38,7 @@ public:
     FILE *energyFile;
     FILE *diffusionFile;
     FILE *pairCorrelationFile;
+    FILE *flowFile;
     bool outputFolderExists;
 
     int nAtoms;
@@ -53,6 +57,19 @@ public:
 
     int nBins;
     double L_bins;
+
+    double tCurr;
+    double tPrev;
+    mat currPosMoving;
+    mat prevPosMoving;
+
+    int nFlowBins;
+    double rMaxFlow;
+    double drFlow;
+//    vec rBins;
+    vec vxAverage;
+
+    vector<const CAtom*> movingAtoms;
 };
 
 #endif // CSTATISTICSSAMPLER_H

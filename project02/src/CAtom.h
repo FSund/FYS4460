@@ -12,7 +12,7 @@ const double F0 = .30303;   // eV
 const double E0 = 0.01038;  // eV
 const double T0 = 119.74;   // K
 const double pi = atan(1)*4;
-const double forcemax = 100000; // MD units
+const double forcemax = 1e4; // MD units
 
 using namespace std;
 using namespace arma;
@@ -58,7 +58,7 @@ public:
 //    void setNewData(const vec3 &newNewPosition, const vec3 &newNewVelocity, const vec3 &newNewForce);
 
 //    void setMatrixAtom();
-    int setAtomType(const string &atomType_);
+    void setAtomType(const string &atomType_);
     string getAtomType() const;
     void forward();
     void resetStatistics();
