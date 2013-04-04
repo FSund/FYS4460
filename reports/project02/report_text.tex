@@ -1,0 +1,108 @@
+\begin{abstract}
+Abstract.
+\end{abstract}
+
+\subsection*{Parallellization}
+We tried parallellizing the program, but the result was a program that ran slower on four cores than on one. The program gave the same results as the serial program though, so it wasn't a complete waste of time. The slowdown is probably because, in our implementation, all threads distribute the forces they have calculated on all atoms to all other threads, and sum them up, each timestep. If we get the time we will try to find a better parallel implementation at a later stage.
+
+\subsection*{Generating a nano-porous material}
+\setcounter{equation}{1}
+A liquid Argon system of size $N_x = N_y = N_z = 20$ fcc unit cells of size $b = 5.720$\AA\ was generated, and thermalized at $T = 0.851$. The system was thermalized using the Berendsen thermostat for 3000 timesteps with $dt = 0.01$. We checked that the energy, temperature and the diffusion (mean square displacement) was stable at this point. The change in temperature after turning off the thermostat was less than 1\%. \\
+
+From this thermalized system we selected 20 random spheres of random radius between 20 and 30\AA, using the periodic boundary conditions to select the full spheres. The atoms inside the spheres was fixed and marked as non-moving matrix-atoms. This means that we still calculate the forces from those atoms on the moving/liquid atoms, but we don't update the positions (and velocities) of the matrix-atoms. After this we had 14612 matrix atoms and 17388 liquid atoms. See figure \ref{fig:spheres} for a visualization of the system. \\
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width =1.00\textwidth]{bilder/spheres2.png}
+    \parbox{0.8\textwidth}{
+        \caption{
+            \small{
+                Porous system generated from liquid Argon system of 32000 atoms by selecting 20 random spheres of atoms and setting those atoms as matrix-atoms. Matrix-atoms in brown and liquid atoms in green (the size of the liquid atoms has been reduced to 0.2 of the size of the brown ones for virtualization purposes).
+            }
+            \label{fig:spheres}
+        }
+    }
+\end{figure}
+
+We can estimate the porosity by letting each atom occupy the same volume, which gives a porosity of $\phi = 17388/32000 \approx 0.543$. From selecting 20 non-overlapping spheres of the same radius we would get a porosity of
+\[
+    \frac{\frac{4}{3}\pi r^3 \cdot 20}{\left(5.720\text{\AA} \cdot 20\right)^3} \approx 0.874,
+\]
+with $r = 25$\AA. To actually measure the porosity in a flowing system we could assign a volume to each atom, and then find the porosity. The biggest problem would then be to find a proper volume for the different atoms. When we have the same density in the whole system this isn't a big issue, but when we start changing the density of the liquid we would have to figure out some good definition of the volume of an atom. \\
+
+% giving a volume of
+% \[
+%     V_\text{atom} = \frac{5.720\text{\AA}^3}{20^3 \cdot 4} = 5.848\cdot 10^{-3} \text{\AA}^3
+% \]
+
+We then removed approximately half the moving atoms at random, to get a liquid with half the density. This left 8730 liquid atoms. After thermalizing the system at $T = 1.5$ we got a system like the one visualized in figure \ref{fig:spheres_pressure}. The system was thermalized using the Berendsen thermostat, with $dt = 0.01$, for 20 000 timesteps.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width =1.00\textwidth]{bilder/spheres_pressure3.png}
+    \parbox{0.8\textwidth}{
+        \caption{
+            \small{
+                Porous Argon system, with only the liquid atoms moving. The colour coding is illustrating the pressure on each atom.
+            }
+            \label{fig:spheres_pressure}
+        }
+    }
+\end{figure}
+
+\subsection*{Diffusion in a nano-porous material}
+
+See figure \ref{fig:diffusion} for a plot of the mean square displacement for the low-density fluid in the nanoporous system. When measuring the displacement we only sum over the moving/liquid atoms.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width =.70\textwidth]{bilder/h_diffusion}
+    \parbox{0.8\textwidth}{
+        \caption{
+            \small{
+                Plot of mean square displacement in the low-density fluid in the nanoporous system.
+            }
+            \label{fig:diffusion}
+        }
+    }
+\end{figure}
+
+
+\FloatBarrier
+\subsection*{Flow in a nano-porous material}
+
+We started from the same system as above, a Ar system consisting of 32 000 atoms, thermalized at $T = 0.851$. We then cut out a cylindrical pore with diameter 20\AA\ in the center of the system, and mark all the atoms outside the sphere as non-moving. We then halved the number of moving atoms at random, leaving 1484 moving atoms. See figure \ref{fig:cylinder} for a visualization of this system.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width =.70\textwidth]{bilder/cylinder}
+    \parbox{0.8\textwidth}{
+        \caption{
+            \small{
+                Visualization of a cylindrical pore in a Argon system consisting of 32000 atoms. The atoms inside the cylinder are marked as moving, and the atoms outside are marked as matrix-atoms/non-moving (the size of the matrix-atoms has been reduced to 0.3 for visualization purposes).
+            }
+            \label{fig:cylinder}
+        }
+    }
+\end{figure}
+
+We then thermalized the system at $T = 1.5$ with the Berendsen thermostat, using $dt = 0.01$, for 20 000 timesteps. At this point the energy and temperature was constant, and the change in them when we turned off the thermostat was less than 1\%. We then turned on a force in the direction of the cylinder, $F_x = 0.1\varepsilon/\sigma$. To reach a stationary state we kept the Berendsen thermostat on while doing the measurements. See figure \ref{fig:flowprofile} for a plot of the flow profile $u(r)$ due to this force. We see that the flow profile fits well with the continuum solution, where the velocity flow profile is given by
+\begin{align}
+    \label{eq:flowprofile}
+    u(r) = \left(1 - \frac{r}{R}\right)^n,
+\end{align}
+where $R$ is the radius of the cylinder, and $n$ is a function of the friction factor.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width =.70\textwidth]{bilder/j_flow}
+    \parbox{0.8\textwidth}{
+        \caption{
+            \small{
+                Flow profile $u(r)$ in a cylindrical pore of radius 20\AA\ due to a force $F_x = 0.1\varepsilon/\sigma$. Notice that the $x$-axis has units $r^2$. For the continuum solution (see equation \ref{eq:flowprofile}) we have used $n = 0.9$.
+            }
+            \label{fig:flowprofile}
+        }
+    }
+\end{figure}
+
